@@ -20,5 +20,4 @@ public record OrderResponse(
     String trackingNumber,
     LocalDateTime createTime,
     List<OrderItemResponse> orderItems
-) {
-}
+) {}

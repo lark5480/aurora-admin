@@ -17,5 +17,4 @@ public record ProductSkuRequest(
 
     @Min(value = 0, message = "SKU库存不能小于0")
     Integer stock
-) {
-}
+) {}

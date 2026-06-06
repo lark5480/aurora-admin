@@ -12,5 +12,4 @@ public record PaymentResponse(
     BigDecimal amount,
     String payMethod,
     String status
-) {
-}
+) {}

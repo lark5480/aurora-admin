@@ -22,5 +22,4 @@ public record ProductResponse(
     LocalDateTime createTime,
     LocalDateTime updateTime,
     List<ProductSku> skus
-) {
-}
+) {}

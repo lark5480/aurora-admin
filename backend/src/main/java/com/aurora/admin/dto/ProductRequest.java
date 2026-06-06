@@ -23,5 +23,4 @@ public record ProductRequest(
 
     String status,
     List<ProductSkuRequest> skus
-) {
-}
+) {}

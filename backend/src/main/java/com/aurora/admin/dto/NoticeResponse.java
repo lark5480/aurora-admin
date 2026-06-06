@@ -16,5 +16,4 @@ public record NoticeResponse(
     LocalDateTime expireTime,
     String status,
     LocalDateTime createTime
-) {
-}
+) {}

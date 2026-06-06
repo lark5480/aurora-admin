@@ -10,5 +10,4 @@ public record SkuOption(
     String specName,
     BigDecimal price,
     Integer stock
-) {
-}
+) {}

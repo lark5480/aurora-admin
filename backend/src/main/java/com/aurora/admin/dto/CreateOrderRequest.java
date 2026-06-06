@@ -24,5 +24,4 @@ public record CreateOrderRequest(
     String receiverAddress,
 
     String remark
-) {
-}
+) {}

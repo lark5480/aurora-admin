@@ -18,5 +18,4 @@ public record CartItemResponse(
     Integer quantity,
     String status,
     List<SkuOption> availableSkus
-) {
-}
+) {}

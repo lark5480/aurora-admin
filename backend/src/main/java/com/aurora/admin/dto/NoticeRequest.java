@@ -13,5 +13,4 @@ public record NoticeRequest(
     List<Long> targetIds,
     LocalDateTime publishTime,
     LocalDateTime expireTime
-) {
-}
+) {}

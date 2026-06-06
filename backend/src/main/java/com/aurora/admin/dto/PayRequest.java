@@ -11,5 +11,4 @@ public record PayRequest(
 
     @NotBlank(message = "支付方式不能为空")
     String payMethod
-) {
-}
+) {}

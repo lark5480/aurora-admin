@@ -24,5 +24,4 @@ public record AddressRequest(
     String detail,
 
     Boolean isDefault
-) {
-}
+) {}
