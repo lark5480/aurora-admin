@@ -1,0 +1,51 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mvn compile)",
+      "Bash(mvn test)",
+      "Bash(mvn clean)",
+      "Bash(mvn spring-boot:run)",
+      "Bash(npm install)",
+      "Bash(npm run dev)",
+      "Bash(npm run build)",
+      "Bash(npm run lint)",
+      "Bash(npm run format)",
+      "Bash(npx tsc --noEmit)",
+      "Bash(npx eslint *)",
+      "Bash(npx prettier *)",
+      "Bash(npx playwright *)",
+      "Bash(curl *)"
+    ]
+  },
+  "enabledPlugins": {
+    "playwright@claude-plugins-official": true
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "name": "ts-format",
+        "description": "Prettier format TypeScript/Vue files after edit",
+        "matcher": "Edit",
+        "pattern": ["**/*.{ts,vue,js}"],
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd frontend && npx prettier --write \"${file_path}\" 2>/dev/null || true"
+          }
+        ]
+      },
+      {
+        "name": "ts-format-new",
+        "description": "Prettier format TypeScript/Vue files after creation",
+        "matcher": "Write",
+        "pattern": ["**/*.{ts,vue,js}"],
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd frontend && npx prettier --write \"${file_path}\" 2>/dev/null || true"
+          }
+        ]
+      }
+    ]
+  }
+}

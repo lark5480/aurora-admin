@@ -1,0 +1,109 @@
+/* Shared table theme — cyberpunk neon dark admin tables */
+
+.el-table {
+  --el-table-bg-color: rgba(0, 0, 0, 0.6);
+  --el-table-tr-bg-color: rgba(0, 0, 0, 0.6);
+  --el-table-header-bg-color: rgba(0, 0, 0, 0.8);
+  --el-table-row-hover-bg-color: rgba(255, 0, 255, 0.08);
+  --el-table-text-color: #e0e0e0;
+  --el-table-header-text-color: #ff00ff;
+  --el-table-border-color: rgba(255, 0, 255, 0.15);
+  --el-table-header-border-color: rgba(0, 255, 255, 0.2);
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 0, 255, 0.15);
+}
+
+/* Header cells — neon glow */
+.el-table th.el-table__cell {
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background: rgba(0, 0, 0, 0.9) !important;
+  border-bottom: 2px solid rgba(0, 255, 255, 0.4);
+}
+
+/* Body cells */
+.el-table td.el-table__cell {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 14px;
+  padding: 14px 0;
+  background: rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Row hover — primary tint */
+.el-table__body tr:hover > td {
+  background-color: rgba(255, 0, 255, 0.06) !important;
+}
+
+/* Striped rows */
+.el-table--striped .el-table__body tr.el-table__row--striped td {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+/* Current row */
+.el-table__body tr.current-row > td {
+  background-color: rgba(0, 255, 255, 0.08) !important;
+}
+
+/* Pagination — dark theme */
+.el-pagination {
+  --el-pagination-text-color: #b0b4c0;
+  --el-pagination-hover-color: #ff00ff;
+}
+
+.el-pagination .btn-prev,
+.el-pagination .btn-next {
+  background: rgba(0, 0, 0, 0.6) !important;
+  border: 1px solid rgba(255, 0, 255, 0.2) !important;
+  border-radius: 8px !important;
+  color: #b0b4c0 !important;
+}
+
+.el-pagination .btn-prev:hover,
+.el-pagination .btn-next:hover {
+  color: #ff00ff !important;
+  border-color: rgba(255, 0, 255, 0.4) !important;
+  box-shadow: 0 0 10px rgba(255, 0, 255, 0.2);
+}
+
+.el-pager li {
+  background: rgba(0, 0, 0, 0.6) !important;
+  color: #b0b4c0 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 8px !important;
+}
+
+.el-pager li.is-active {
+  background: rgba(255, 0, 255, 0.15) !important;
+  color: #ff00ff !important;
+  font-weight: 600;
+  border-color: rgba(255, 0, 255, 0.3) !important;
+  box-shadow: 0 0 15px rgba(255, 0, 255, 0.2);
+}
+
+.el-pager li:hover {
+  color: #ff00ff !important;
+}
+
+.el-pagination .el-select .el-input__wrapper {
+  background: rgba(0, 0, 0, 0.6) !important;
+  border: 1px solid rgba(255, 0, 255, 0.2) !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+}
+
+.el-pagination .el-select .el-input__wrapper:hover {
+  border-color: rgba(0, 255, 255, 0.4) !important;
+}
+
+/* Fix input text color in select */
+.el-pagination .el-select .el-input__inner {
+  color: #e0e0e0 !important;
+}
+
+/* Fix total text */
+.el-pagination__total {
+  color: rgba(255, 255, 255, 0.5);
+}

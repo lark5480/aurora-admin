@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.aurora.admin.mapper.AfterSaleMapper">
+
+    <sql id="afterSaleFilterWhere">
+        a.is_deleted = 0
+        <if test="userId != null">AND a.user_id = #{userId}</if>
+        <if test="orderId != null">AND a.order_id = #{orderId}</if>
+        <if test="status != null and status != ''">AND a.status = #{status}</if>
+        <if test="afterSaleNo != null and afterSaleNo != ''">AND a.after_sale_no LIKE CONCAT('%', #{afterSaleNo}, '%')</if>
+        <if test="orderNo != null and orderNo != ''">AND o.order_no LIKE CONCAT('%', #{orderNo}, '%')</if>
+    </sql>
+
+    <select id="findPage" resultType="com.aurora.admin.entity.AfterSale">
+        SELECT a.*, o.order_no AS order_no
+        FROM t_after_sale a
+        LEFT JOIN t_order o ON a.order_id = o.id AND o.is_deleted = 0
+        <where><include refid="afterSaleFilterWhere"/></where>
+        ORDER BY a.create_time DESC
+        LIMIT #{offset}, #{size}
+    </select>
+
+    <select id="countFiltered" resultType="long">
+        SELECT COUNT(*)
+        FROM t_after_sale a
+        LEFT JOIN t_order o ON a.order_id = o.id AND o.is_deleted = 0
+        <where><include refid="afterSaleFilterWhere"/></where>
+    </select>
+
+    <select id="findPendingOver24h" resultType="com.aurora.admin.entity.AfterSale">
+        SELECT a.*, o.order_no AS order_no
+        FROM t_after_sale a
+        LEFT JOIN t_order o ON a.order_id = o.id AND o.is_deleted = 0
+        WHERE a.is_deleted = 0
+          AND a.status = 'APPLIED'
+          AND a.create_time &lt; DATE_SUB(NOW(), INTERVAL 24 HOUR)
+    </select>
+
+</mapper>

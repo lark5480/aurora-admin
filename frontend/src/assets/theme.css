@@ -1,0 +1,96 @@
+/* Cyberpunk Neon Theme Variables */
+:root {
+  /* Neon Colors */
+  --neon-magenta: #ff00ff;
+  --neon-cyan: #00ffff;
+  --neon-green: #39ff14;
+  --neon-magenta-dim: #ff0080;
+  --neon-cyan-dim: #00d4ff;
+  --neon-green-dim: #00ff88;
+
+  /* Background Colors */
+  --bg-dark: #0a0a0f;
+  --bg-darker: #000000;
+  --glass-bg: rgba(0, 0, 0, 0.6);
+  --glass-bg-light: rgba(255, 255, 255, 0.05);
+
+  /* Border Colors */
+  --border-glow-magenta: rgba(255, 0, 255, 0.3);
+  --border-glow-cyan: rgba(0, 255, 255, 0.3);
+  --border-subtle: rgba(255, 255, 255, 0.1);
+
+  /* Text Colors */
+  --text-primary: #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.7);
+  --text-muted: rgba(255, 255, 255, 0.5);
+
+  /* Glow Effects */
+  --glow-magenta: 0 0 20px rgba(255, 0, 255, 0.5);
+  --glow-cyan: 0 0 20px rgba(0, 255, 255, 0.5);
+  --glow-green: 0 0 20px rgba(57, 255, 20, 0.5);
+
+  /* Spacing */
+  --sidebar-width: 240px;
+  --sidebar-width-md: 200px;
+  --topbar-height: 64px;
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-normal: 300ms ease;
+
+  /* Z-Index Scale */
+  --z-base: 0;
+  --z-above: 1;
+  --z-sidebar: 100;
+  --z-topbar: 50;
+  --z-overlay: 200;
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Global Styles */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg-darker);
+  font-family:
+    'Outfit',
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-dark);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-glow-magenta);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--neon-magenta);
+}
