@@ -1,5 +1,12 @@
 package com.aurora.admin.service.impl;
 
+import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.aurora.admin.dto.PageResult;
 import com.aurora.admin.dto.ProductQuery;
 import com.aurora.admin.dto.ProductRequest;
@@ -13,14 +20,9 @@ import com.aurora.admin.mapper.ProductMapper;
 import com.aurora.admin.mapper.ProductSkuMapper;
 import com.aurora.admin.service.ProductSearchService;
 import com.aurora.admin.service.ProductService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.List;
 
 @Slf4j
 @Service
@@ -142,7 +144,12 @@ public class ProductServiceImpl implements ProductService {
         }
         productMapper.updateStatus(id, status);
 
-        syncToEs(id);
+        // 上架时同步到 ES，下架时从 ES 删除
+        if (STATUS_ON_SALE.equals(status)) {
+            syncToEs(id);
+        } else {
+            syncDeleteFromEs(id);
+        }
     }
 
     @Override
@@ -155,8 +162,14 @@ public class ProductServiceImpl implements ProductService {
             throw new IllegalArgumentException("无效的商品状态: " + status);
         }
         productMapper.batchUpdateStatus(ids, status);
+        
+        // 批量处理 ES 同步
         for (Long id : ids) {
-            syncToEs(id);
+            if (STATUS_ON_SALE.equals(status)) {
+                syncToEs(id);
+            } else {
+                syncDeleteFromEs(id);
+            }
         }
     }
 
