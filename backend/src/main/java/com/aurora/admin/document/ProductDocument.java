@@ -1,16 +1,18 @@
 package com.aurora.admin.document;
 
-import com.aurora.admin.entity.Product;
-import lombok.Getter;
-import lombok.Setter;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import com.aurora.admin.entity.Product;
+
+import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 @Setter
@@ -20,10 +22,12 @@ public class ProductDocument {
     @Id
     private Long id;
 
-    @Field(type = FieldType.Text)
+    // 使用 IK 智能分词器（粗粒度，适合搜索）
+    @Field(type = FieldType.Text, analyzer = "ik_smart", searchAnalyzer = "ik_smart")
     private String name;
 
-    @Field(type = FieldType.Text)
+    // 使用 IK 最大分词器（细粒度，提高召回率）
+    @Field(type = FieldType.Text, analyzer = "ik_max_word", searchAnalyzer = "ik_smart")
     private String description;
 
     private Long categoryId;

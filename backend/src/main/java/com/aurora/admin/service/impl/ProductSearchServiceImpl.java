@@ -1,16 +1,7 @@
 package com.aurora.admin.service.impl;
 
-import co.elastic.clients.elasticsearch._types.query_dsl.Query;
-import com.aurora.admin.document.ProductDocument;
-import com.aurora.admin.entity.Product;
-import com.aurora.admin.entity.ProductCategory;
-import com.aurora.admin.mapper.ProductCategoryMapper;
-import com.aurora.admin.mapper.ProductMapper;
-import com.aurora.admin.mapper.ProductSearchMapper;
-import com.aurora.admin.repository.ProductSearchRepository;
-import com.aurora.admin.service.ProductSearchService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -21,7 +12,18 @@ import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import java.util.List;
+import com.aurora.admin.document.ProductDocument;
+import com.aurora.admin.entity.Product;
+import com.aurora.admin.entity.ProductCategory;
+import com.aurora.admin.mapper.ProductCategoryMapper;
+import com.aurora.admin.mapper.ProductMapper;
+import com.aurora.admin.mapper.ProductSearchMapper;
+import com.aurora.admin.repository.ProductSearchRepository;
+import com.aurora.admin.service.ProductSearchService;
+
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
@@ -49,7 +51,7 @@ public class ProductSearchServiceImpl implements ProductSearchService {
                     if (categoryId != null) {
                         b.filter(f -> f.term(t -> t.field("categoryId").value(categoryId)));
                     }
-                    // 状态筛选
+                    // 状态筛选（防御性编程，虽然 ES 目前只存上架商品）
                     if (StringUtils.hasText(status)) {
                         b.filter(f -> f.term(t -> t.field("status").value(status)));
                     }
@@ -123,6 +125,22 @@ public class ProductSearchServiceImpl implements ProductSearchService {
     public void delete(Long productId) {
         productSearchRepository.deleteById(productId);
         log.debug("商品索引已删除: id={}", productId);
+    }
+
+    @Override
+    public void deleteIndex() {
+        try {
+            var indexOps = elasticsearchOperations.indexOps(ProductDocument.class);
+            if (indexOps.exists()) {
+                indexOps.delete();
+                log.info("[ES] products 索引已删除");
+            } else {
+                log.warn("[ES] products 索引不存在");
+            }
+        } catch (Exception e) {
+            log.error("[ES] 删除索引失败", e);
+            throw new RuntimeException("删除索引失败: " + e.getMessage(), e);
+        }
     }
 
     private String resolveCategoryName(Long categoryId) {

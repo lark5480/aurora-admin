@@ -1,7 +1,8 @@
 package com.aurora.admin.service;
 
-import com.aurora.admin.document.ProductDocument;
 import org.springframework.data.domain.Page;
+
+import com.aurora.admin.document.ProductDocument;
 
 public interface ProductSearchService {
 
@@ -29,4 +30,9 @@ public interface ProductSearchService {
      * 删除指定商品索引
      */
     void delete(Long productId);
+
+    /**
+     * 删除整个 products 索引
+     */
+    void deleteIndex();
 }

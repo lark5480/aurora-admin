@@ -10,7 +10,7 @@
         <div class="filter-row">
           <el-input
             v-model="searchKeyword"
-            placeholder="搜索商品名称"
+            placeholder="搜索商品名称或描述"
             :prefix-icon="Search"
             clearable
             class="search-input"
