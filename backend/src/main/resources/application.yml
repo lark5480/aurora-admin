@@ -9,9 +9,6 @@ spring:
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:dev}
   datasource:
-    url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       connection-timeout: 3000
@@ -36,4 +33,4 @@ jwt:
   expiration: ${JWT_EXPIRATION:86400000}
 
 file:
-  upload-dir: ${FILE_UPLOAD_DIR:F:/other/code/ai/claudeCodeDemo3/uploads}
+  upload-dir: ${FILE_UPLOAD_DIR:./uploads}
