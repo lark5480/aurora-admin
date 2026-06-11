@@ -1,7 +1,7 @@
 package com.aurora.admin.config;
 
-import com.aurora.admin.util.JwtUtil;
-import jakarta.servlet.http.HttpServletRequest;
+import java.util.Collections;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
@@ -19,7 +19,9 @@ import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBr
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
-import java.util.Collections;
+import com.aurora.admin.util.JwtUtil;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @Configuration
 @EnableWebSocketMessageBroker
@@ -66,10 +68,11 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                     }
 
                     if (StringUtils.hasText(token) && jwtUtil.validateToken(token)) {
-                        String username = jwtUtil.getUsernameFromToken(token);
                         Long userId = jwtUtil.getUserIdFromToken(token);
+                        // Principal name 必须与 convertAndSendToUser 的第一个参数（recipientId）一致，
+                        // 否则 SimpUserRegistry 无法根据 userId 路由消息，导致前端收不到 WebSocket 推送
                         UsernamePasswordAuthenticationToken authentication =
-                                new UsernamePasswordAuthenticationToken(username, userId, Collections.emptyList());
+                                new UsernamePasswordAuthenticationToken(userId.toString(), userId, Collections.emptyList());
                         SecurityContextHolder.getContext().setAuthentication(authentication);
                         accessor.setUser(authentication);
                     }

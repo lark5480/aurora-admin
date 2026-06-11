@@ -1,7 +1,13 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
+import {
+  addHandler,
+  removeHandler,
+  isConnected as wsIsConnected,
+  connect as wsConnect,
+  disconnect as wsDisconnect,
+} from '../services/websocket'
 import api from '../utils/request'
-import { connect as wsConnect, disconnect as wsDisconnect } from '../services/websocket'
 import { useConfigStore } from './config'
 
 interface Message {
@@ -19,6 +25,7 @@ export const useMessageStore = defineStore('message', () => {
   const unreadCount = ref(0)
   const messages = ref<Message[]>([])
   const isConnected = ref(false)
+  let handlerRegistered = false
 
   function setUnreadCount(count: number): void {
     unreadCount.value = count
@@ -29,17 +36,42 @@ export const useMessageStore = defineStore('message', () => {
     unreadCount.value++
   }
 
-  function connect(onMessage?: (data: Message) => void): void {
+  function connect(): void {
     const configStore = useConfigStore()
     if (!configStore.getBool('ws.enabled', true)) {
       return
     }
-    if (isConnected.value) return
-    wsConnect((data: Message) => {
-      addMessage(data)
-      if (onMessage) onMessage(data)
-    })
+
+    // 注册内部 handler（仅一次，避免重复注册）
+    if (!handlerRegistered) {
+      addHandler((data: any) => {
+        const payload = data?.data || data
+        if (payload?.id) {
+          addMessage(payload)
+        } else if (payload?.unreadCount !== undefined) {
+          setUnreadCount(payload.unreadCount)
+        }
+      })
+      handlerRegistered = true
+    }
+
+    // 仅在 WebSocket 未连接时才发起新连接
+    if (!wsIsConnected()) {
+      wsConnect()
+    }
     isConnected.value = true
+  }
+
+  function onNewMessage(handler: ((data: any) => void) | null): void {
+    if (handler) {
+      addHandler(handler)
+    }
+  }
+
+  function offNewMessage(handler: ((data: any) => void) | null): void {
+    if (handler) {
+      removeHandler(handler)
+    }
   }
 
   async function markAllRead(): Promise<boolean> {
@@ -65,6 +97,7 @@ export const useMessageStore = defineStore('message', () => {
   function disconnect(): void {
     wsDisconnect()
     isConnected.value = false
+    handlerRegistered = false
   }
 
   return {
@@ -74,6 +107,8 @@ export const useMessageStore = defineStore('message', () => {
     setUnreadCount,
     addMessage,
     connect,
+    onNewMessage,
+    offNewMessage,
     markAllRead,
     fetchUnreadCount,
     disconnect,
