@@ -1,5 +1,11 @@
 # Docker 安装 MySQL 8.0 及配置
 
+> **提示**：
+> - 本文档介绍如何使用 Docker 安装 MySQL（端口映射为 13306）。
+> - 如果您已安装本地 MySQL，可以直接使用 3306 端口，无需执行以下步骤。
+> - 项目默认配置 `application-dev.yml` 使用 3306 端口（本地 MySQL）。
+> - **支持 Rancher Desktop 和 Docker Desktop**，两者命令完全相同。
+
 ---
 
 ## 1. 拉取镜像

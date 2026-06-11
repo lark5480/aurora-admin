@@ -171,14 +171,9 @@ const sendRules = {
   content: [{ required: true, message: '请输入内容', trigger: 'blur' }],
 }
 
-const handleNewMessage = (msg) => {
-  // 如果在未读 tab，直接刷新列表（用户在看未读消息，小红点不用加）
-  if (activeTab.value === 'unread') {
-    fetchMessages()
-  } else {
-    // 不在未读 tab 才增加未读计数
-    messageStore.addMessage(msg)
-  }
+const handleNewMessage = () => {
+  // store 内部 handler 已更新 unreadCount，这里只需刷新消息列表
+  fetchMessages()
 }
 
 const fetchUsers = async () => {
@@ -257,20 +252,6 @@ const fetchMessages = async () => {
   }
 }
 
-const fetchUnreadCount = async () => {
-  try {
-    const res = await fetch('/api/messages/unread-count', {
-      headers: { Authorization: `Bearer ${userStore.token}` },
-    })
-    if (res.ok) {
-      const data = await res.json()
-      messageStore.setUnreadCount(data.count || 0)
-    }
-  } catch (e) {
-    console.error('Failed to fetch unread count:', e)
-  }
-}
-
 const handleTabChange = () => {
   currentPage.value = 1
   fetchMessages()
@@ -293,7 +274,7 @@ const handleMarkRead = async (msg) => {
       headers: { Authorization: `Bearer ${userStore.token}` },
     })
     if (res.ok) {
-      messageStore.setUnreadCount(Math.max(0, messageStore.unreadCount - 1))
+      // WebSocket 通知会推送最新 unreadCount，此处无需手动 -1
       fetchMessages()
     } else {
       ElMessage.error('标记已读失败')
@@ -340,13 +321,13 @@ const handleDeleteMessage = async (msg) => {
 }
 
 onMounted(() => {
-  messageStore.connect(handleNewMessage)
+  messageStore.onNewMessage(handleNewMessage)
   fetchMessages()
-  fetchUnreadCount()
+  messageStore.fetchUnreadCount()
 })
 
 onUnmounted(() => {
-  messageStore.disconnect()
+  messageStore.offNewMessage(handleNewMessage)
 })
 </script>
 

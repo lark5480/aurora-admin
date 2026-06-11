@@ -1,9 +1,9 @@
-import Client from 'stompjs'
 import SockJS from 'sockjs-client'
+import Client from 'stompjs'
 
 /* eslint-disable @typescript-eslint/no-explicit-any -- stompjs/sockjs-client lack proper TS types */
 let stompClient: any = null
-let onMessageCallback: ((data: any) => void) | null = null
+let messageHandlers: Array<(data: any) => void> = []
 let reconnectTimer: ReturnType<typeof setTimeout> | null = null
 let reconnectAttempts = 0
 const MAX_RECONNECT_ATTEMPTS = 10
@@ -34,11 +34,11 @@ function scheduleReconnect(): void {
   reconnectAttempts++
   const delay = RECONNECT_DELAY * Math.min(reconnectAttempts, 5)
   reconnectTimer = setTimeout(() => {
-    connect(onMessageCallback)
+    connect()
   }, delay)
 }
 
-export function connect(onMessage: ((data: any) => void) | null = null): void {
+export function connect(): void {
   if (stompClient && stompClient.connected) {
     return
   }
@@ -49,8 +49,6 @@ export function connect(onMessage: ((data: any) => void) | null = null): void {
     return
   }
 
-  onMessageCallback = onMessage
-
   const socket = new SockJS('/ws/message')
   stompClient = Client.over(socket)
 
@@ -58,12 +56,12 @@ export function connect(onMessage: ((data: any) => void) | null = null): void {
     { Authorization: `Bearer ${getToken()}` },
     () => {
       reconnectAttempts = 0
-      const subscription = stompClient.subscribe(`/user/${userId}/queue/messages`, (message: any) => {
+      const subscription = stompClient.subscribe(`/user/queue/messages`, (message: any) => {
         if (message.body) {
           try {
             const data = JSON.parse(message.body)
-            if (onMessageCallback) {
-              onMessageCallback(data)
+            for (const handler of messageHandlers) {
+              handler(data)
             }
           } catch (e) {
             console.error('[WebSocket] Parse error:', e)
@@ -87,6 +85,23 @@ export function connect(onMessage: ((data: any) => void) | null = null): void {
   }
 }
 
+export function addHandler(handler: (data: any) => void): void {
+  messageHandlers.push(handler)
+}
+
+export function removeHandler(handler: (data: any) => void): void {
+  messageHandlers = messageHandlers.filter((h) => h !== handler)
+}
+
+export function setCallback(callback: ((data: any) => void) | null): void {
+  // deprecated: use addHandler/removeHandler instead
+  if (callback) {
+    messageHandlers = [callback]
+  } else {
+    messageHandlers = []
+  }
+}
+
 export function disconnect(): void {
   if (reconnectTimer) {
     clearTimeout(reconnectTimer)
@@ -100,7 +115,7 @@ export function disconnect(): void {
     }
     stompClient.disconnect()
     stompClient = null
-    onMessageCallback = null
+    messageHandlers = []
   }
 }
 

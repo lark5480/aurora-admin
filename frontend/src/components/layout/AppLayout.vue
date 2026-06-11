@@ -103,7 +103,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, reactive } from 'vue'
+import { computed, onMounted, onUnmounted, ref, reactive } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '../../stores/user'
@@ -338,6 +338,10 @@ onMounted(async () => {
   } catch (e) {
     console.warn('加载用户信息失败', e)
   }
+})
+
+onUnmounted(() => {
+  messageStore.disconnect()
 })
 </script>
 
