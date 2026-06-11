@@ -23,7 +23,7 @@ cd frontend && npm install && npm run dev   # 前端 3001
 
 ## 架构要点
 - **认证**：JWT Bearer Token + Spring Security + `JwtAuthenticationFilter`（OncePerRequestFilter），`sessionStorage` 存 token
-- **鉴权**：`@PreAuthorize("hasRole('ADMIN')")` 方法级权限，前端 `v-permission` 指令（`directives/permission.ts`）按钮级鉴权
+- **鉴权**：`@PreAuthorize("hasAnyRole('ADMIN','SUPER_ADMIN')")` 方法级权限，前端 `v-permission` 指令（`directives/permission.ts`）按钮级鉴权
 - **状态**：Pinia Setup Store 语法（`defineStore('x', () => { ... })`），7 个 store：user / message / config / product / order / address / afterSale
 - **路由**：动态路由 — 登录后 `useUserStore().menuTree` 驱动 `router.addRoute('home', ...)` 注册子路由
 - **响应**：`ApiResponse<T>` (code, message, data)，`utils/request.ts` 的 axios 响应拦截器自动解包
@@ -39,10 +39,13 @@ cd frontend && npm install && npm run dev   # 前端 3001
 
 ## 关键约定
 - Entity：必须 `@TableName` + `@TableId(type = IdType.AUTO)`，使用 `@Getter @Setter` 不用 `@Data`
-- 数据库：`schema.sql` 自动执行（`spring.sql.init.mode=always`），MyBatis-Plus `#{}` 参数化查询
+- 数据库：`schema.sql` 自动执行（`spring.sql.init.mode=always`），初始化数据用 `INSERT IGNORE` 避免重复报错
+- 权限注解：统一用 `hasAnyRole('ADMIN','SUPER_ADMIN')`，不要只写 `hasRole('ADMIN')`
 - DI：新代码用构造器注入，旧代码 `@Autowired` 字段注入可接受
 - 前端：`<script setup lang="ts">`，interface 定义 props/emits，`import type` 导类型
-- 样式：赛博朋克暗色主题（#ff00ff #00ffff #39ff14），`assets/theme.css` + `assets/table.css`
+- 样式：赛博朋克暗色主题（#ff00ff #00ffff #39ff14），`assets/theme.css` + `assets/table.css`；组件用 scoped style，弹窗等非组件内 DOM 用独立非 scoped style 块
+- 改一个文件时，先读完整个文件再动手；新增字段/接口时同步更新 schema.sql
+- 改完代码后主动编译验证（`mvn compile` / `vue-tsc --noEmit`）
 
 ## 调试
 - 账号：`admin` / `admin123`（`schema.sql` 首次建库自动创建，SUPER_ADMIN 角色），`user` / `123456`（普通用户）
