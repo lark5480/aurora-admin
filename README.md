@@ -25,13 +25,19 @@ docs/
 | 后端 | Java 21, Spring Boot 3, MyBatis-Plus 3, MySQL 8 |
 | 缓存 | Redis (Lettuce) |
 | 消息队列 | RabbitMQ |
-| 搜索引擎 | Elasticsearch 7 |
+| 搜索引擎 | Elasticsearch 8 |
 | 前端 | Vue 3, TypeScript, Vite, Pinia, Element Plus, ECharts |
 | 认证 | JWT + Spring Security |
 
 ## 快速启动
 
-中间件就绪后：
+### 一键启动全部中间件（推荐）
+
+```bash
+docker compose up mysql redis rabbitmq elasticsearch -d
+```
+
+然后启动后端和前端：
 
 ```bash
 # 后端 — 默认激活 dev 配置，启动在 8080
@@ -40,6 +46,14 @@ cd backend && mvn spring-boot:run
 # 前端 — 启动在 3001
 cd frontend && npm install && npm run dev
 ```
+
+### 全部容器化（演示/部署）
+
+```bash
+docker compose up -d
+```
+
+前端：http://localhost:80 | 后端 API：http://localhost:8080
 
 ## 默认账号
 

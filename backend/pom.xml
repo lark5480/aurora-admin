@@ -195,15 +195,6 @@
                     <failOnViolation>false</failOnViolation>
                     <violationSeverity>warning</violationSeverity>
                 </configuration>
-                <executions>
-                    <execution>
-                        <id>checkstyle</id>
-                        <phase>validate</phase>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>

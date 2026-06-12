@@ -1,17 +1,14 @@
 # Docker 安装 MySQL 8.0 及配置
 
-> **提示**：
-> - 本文档介绍如何使用 Docker 安装 MySQL（端口映射为 13306）。
-> - 如果您已安装本地 MySQL，可以直接使用 3306 端口，无需执行以下步骤。
-> - 项目默认配置 `application-dev.yml` 使用 3306 端口（本地 MySQL）。
-> - **支持 Rancher Desktop 和 Docker Desktop**，两者命令完全相同。
+> **推荐直接使用项目根目录的 `docker-compose.yml` 一键启动所有中间件。**
+> 本文档仅在你需要单独安装 MySQL 时参考。
 
 ---
 
 ## 1. 拉取镜像
 
 ```powershell
-docker pull mysql:8.0.33
+docker pull mysql:8.0
 ```
 
 ---
@@ -20,14 +17,14 @@ docker pull mysql:8.0.33
 
 ```powershell
 docker run -d `
-  --name dev-mysql `
-  -p 13306:3306 `
+  --name aurora-mysql `
+  -p 3306:3306 `
   -e MYSQL_ROOT_PASSWORD=root123 `
   -e MYSQL_DATABASE=aurora_admin `
   -v mysql_data:/var/lib/mysql `
-  -v F:\other\code\ai\claudeCodeDemo3\backend\src\main\resources\schema.sql:/docker-entrypoint-initdb.d/01-schema.sql `
+  -v ${PWD}/backend/src/main/resources/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql `
   --restart unless-stopped `
-  mysql:8.0.33 `
+  mysql:8.0 `
   --character-set-server=utf8mb4 `
   --collation-server=utf8mb4_unicode_ci `
   --default-time-zone=+08:00
@@ -38,7 +35,6 @@ docker run -d `
 > - `MYSQL_DATABASE=aurora_admin` — 容器启动时自动创建数据库
 > - `01-schema.sql` — 挂载到 `docker-entrypoint-initdb.d` 会在首次启动时自动执行建表
 > - 数据持久化在 named volume `mysql_data`，删容器不会丢数据
-> - `schema.sql` 的绝对路径请改成你自己项目的实际路径
 
 ---
 
@@ -47,7 +43,7 @@ docker run -d `
 ### 命令行验证
 
 ```powershell
-docker exec -it dev-mysql mysql -uroot -proot123 aurora_admin
+docker exec -it aurora-mysql mysql -uroot -proot123 aurora_admin
 ```
 
 进去后跑个查询确认 schema 已执行：
@@ -63,10 +59,9 @@ SHOW TABLES;
 | 参数 | 值 |
 |------|-----|
 | Host | `localhost` |
-| Port | `13306` |
+| Port | `3306` |
 | User | `root` |
 | Password | `root123` |
-| Database | `aurora_admin` |
 
 ---
 
@@ -74,22 +69,22 @@ SHOW TABLES;
 
 ```powershell
 # 查看日志
-docker logs dev-mysql
+docker logs aurora-mysql
 
 # 进入容器
-docker exec -it dev-mysql bash
+docker exec -it aurora-mysql bash
 
 # 重启
-docker restart dev-mysql
+docker restart aurora-mysql
 
 # 停止
-docker stop dev-mysql
+docker stop aurora-mysql
 
 # 启动（已停止的容器）
-docker start dev-mysql
+docker start aurora-mysql
 
 # 彻底删除（包括数据卷）
-docker rm -f dev-mysql
+docker rm -f aurora-mysql
 docker volume rm mysql_data
 ```
 
@@ -102,7 +97,7 @@ docker volume rm mysql_data
 ```yaml
 spring:
   datasource:
-    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:13306}/${DB_NAME:aurora_admin}?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:aurora_admin}?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:root123}
 ```
@@ -119,7 +114,7 @@ Docker 启动后直接 `mvn spring-boot:run` 即可，默认值已对齐容器�
 
 ```powershell
 # 手动执行 schema
-docker exec -i dev-mysql mysql -uroot -proot123 aurora_admin < F:\other\code\ai\claudeCodeDemo3\backend\src\main\resources\schema.sql
+docker exec -i aurora-mysql mysql -uroot -proot123 aurora_admin < backend/src/main/resources/schema.sql
 ```
 
 ### MySQL 8 连接报 "Public Key Retrieval is not allowed"
@@ -127,7 +122,7 @@ docker exec -i dev-mysql mysql -uroot -proot123 aurora_admin < F:\other\code\ai\
 JDBC URL 末尾加参数 `&allowPublicKeyRetrieval=true`：
 
 ```
-jdbc:mysql://localhost:13306/aurora_admin?...&allowPublicKeyRetrieval=true
+jdbc:mysql://localhost:3306/aurora_admin?...&allowPublicKeyRetrieval=true
 ```
 
 ### 数据卷在哪？

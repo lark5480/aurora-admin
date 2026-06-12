@@ -1,4 +1,13 @@
 -- ========================================
+-- Aurora Admin 数据库初始化脚本
+-- ========================================
+CREATE DATABASE IF NOT EXISTS aurora_admin
+    DEFAULT CHARACTER SET utf8mb4
+    DEFAULT COLLATE utf8mb4_unicode_ci;
+
+USE aurora_admin;
+
+-- ========================================
 -- 用户表
 -- ========================================
 CREATE TABLE IF NOT EXISTS t_user (

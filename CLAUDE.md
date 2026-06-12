@@ -4,23 +4,6 @@
 - 后端：Java 21, Spring Boot 3, MyBatis-Plus 3, MySQL 8, Redis (Lettuce), RabbitMQ, Elasticsearch 7
 - 前端：Vue 3, TypeScript, Vite, Pinia, Element Plus, ECharts
 
-## 项目结构
-```
-backend/  src/main/java/com/aurora/admin/
-  controller/  service/  mapper/  entity/  dto/  config/  filter/
-  exception/   task/     aspect/  util/    document/  annotation/
-  listener/    repository/
-frontend/  src/
-  views/  stores/  api/  router/  components/  directives/  services/  utils/  assets/
-docs/          # 项目文档（环境搭建指南等）
-```
-
-## 开发命令
-```bash
-cd backend && mvn spring-boot:run    # 后端 8080
-cd frontend && npm install && npm run dev   # 前端 3001
-```
-
 ## 架构要点
 - **认证**：JWT Bearer Token + Spring Security + `JwtAuthenticationFilter`（OncePerRequestFilter），`sessionStorage` 存 token
 - **鉴权**：`@PreAuthorize("hasAnyRole('ADMIN','SUPER_ADMIN')")` 方法级权限，前端 `v-permission` 指令（`directives/permission.ts`）按钮级鉴权
@@ -48,7 +31,7 @@ cd frontend && npm install && npm run dev   # 前端 3001
 - 改完代码后主动编译验证（`mvn compile` / `vue-tsc --noEmit`）
 
 ## 调试
-- 账号：`admin` / `admin123`（`schema.sql` 首次建库自动创建，SUPER_ADMIN 角色），`user` / `123456`（普通用户）
+- 账号：`admin` / `admin123`（SUPER_ADMIN），`user` / `123456`（普通用户）
 - 常用检查：`cd frontend && npx tsc --noEmit` | `cd backend && mvn test` | `cd frontend && npx playwright test`
 - RabbitMQ 面板：`http://localhost:15672` | ES 验证：`curl http://localhost:9200`
 
