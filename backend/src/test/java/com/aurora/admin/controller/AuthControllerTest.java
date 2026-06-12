@@ -6,6 +6,8 @@ import com.aurora.admin.dto.LoginRequest;
 import com.aurora.admin.dto.LoginResponse;
 import com.aurora.admin.dto.RegisterRequest;
 import com.aurora.admin.entity.User;
+import com.aurora.admin.entity.Menu;
+import com.aurora.admin.mapper.MenuMapper;
 import com.aurora.admin.mapper.RoleMapper;
 import com.aurora.admin.service.UserService;
 import com.aurora.admin.util.JwtUtil;
@@ -54,6 +56,9 @@ class AuthControllerTest {
     private RoleMapper roleMapper;
 
     @Mock
+    private MenuMapper menuMapper;
+
+    @Mock
     private ConfigCache configCache;
 
     private AuthController authController;
@@ -70,6 +75,7 @@ class AuthControllerTest {
         setField(authController, "jwtUtil", jwtUtil);
         setField(authController, "redisTemplate", redisTemplate);
         setField(authController, "roleMapper", roleMapper);
+        setField(authController, "menuMapper", menuMapper);
         setField(authController, "configCache", configCache);
 
         // 默认：注册功能开启
@@ -169,6 +175,12 @@ class AuthControllerTest {
         when(roleMapper.findCodesByUserId(1L)).thenReturn(List.of("USER"));
         when(jwtUtil.generateToken("testuser", 1L, List.of("USER"))).thenReturn("test.jwt.token");
 
+        // mock getPermissions 调用链
+        when(roleMapper.findIdsByCodes(List.of("USER"))).thenReturn(List.of(10L));
+        Menu menu = new Menu();
+        menu.setPermission("system:user:list");
+        when(menuMapper.findByRoleIds(List.of(10L))).thenReturn(List.of(menu));
+
         // when
         ResponseEntity<ApiResponse> response = authController.login(request, null, httpRequest);
 
@@ -179,6 +191,7 @@ class AuthControllerTest {
         assertNotNull(loginResponse);
         assertEquals("test.jwt.token", loginResponse.getToken());
         assertEquals("testuser", loginResponse.getUsername());
+        assertTrue(loginResponse.getPermissions().contains("system:user:list"));
     }
 
     @Test

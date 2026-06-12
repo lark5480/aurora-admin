@@ -1,6 +1,7 @@
 # Docker 安装 Redis 及配置
 
-> **本地开发使用单机 Redis**，简单够用。线上生产环境使用 Redis Cluster，见 `application-prod.yml`。
+> **推荐直接使用项目根目录的 `docker-compose.yml` 一键启动所有中间件。**
+> 本文档仅在你需要单独安装 Redis 时参考。
 
 ---
 
@@ -9,26 +10,26 @@
 ### 1. 拉取镜像 & 启动
 
 ```powershell
-docker pull redis:7.0-alpine
+docker pull redis:7-alpine
 
 docker run -d `
-  --name dev-redis `
+  --name aurora-redis `
   -p 6379:6379 `
   -v redis_data:/data `
   --restart unless-stopped `
-  redis:7.0-alpine `
-  redis-server --appendonly yes --protected-mode no
+  redis:7-alpine `
+  redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
 ```
 
-一行搞定，AOF 持久化开，protected-mode 关（Docker 内部走 bridge 网络不影响）。
+一行搞定，AOF 持久化开，限制最大内存 256MB 并启用 LRU 淘汰策略。
 
 ### 2. 验证
 
 ```powershell
-docker exec -it dev-redis redis-cli ping
+docker exec -it aurora-redis redis-cli ping
 # 返回 PONG
 
-docker exec -it dev-redis redis-cli
+docker exec -it aurora-redis redis-cli
 127.0.0.1:6379> set foo bar
 127.0.0.1:6379> get foo
 # "bar"
@@ -56,12 +57,12 @@ spring:
 ### 4. 常用命令
 
 ```powershell
-docker logs dev-redis                 # 查看日志
-docker restart dev-redis              # 重启
-docker exec -it dev-redis redis-cli   # 进入 CLI
+docker logs aurora-redis                  # 查看日志
+docker restart aurora-redis               # 重启
+docker exec -it aurora-redis redis-cli    # 进入 CLI
 
 # 彻底删除
-docker rm -f dev-redis
+docker rm -f aurora-redis
 docker volume rm redis_data
 ```
 
@@ -74,7 +75,7 @@ docker volume rm redis_data
 ### 1. 拉取镜像
 
 ```powershell
-docker pull redis:7.0-alpine
+docker pull redis:7-alpine
 ```
 
 ### 2. 手动搭建
@@ -91,7 +92,7 @@ for ($i=0; $i -lt 6; $i++) {
         -p $((7000+$i)):6379 `
         -v redis_data_$i:/data `
         --restart unless-stopped `
-        redis:7.0-alpine `
+        redis:7-alpine `
         redis-server --cluster-enabled yes --cluster-config-file nodes.conf `
                      --appendonly yes --protected-mode no
 }
@@ -100,7 +101,7 @@ for ($i=0; $i -lt 6; $i++) {
 $ips = @()
 for ($i=0; $i -lt 6; $i++) {
     $ip = docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "redis-node-$i"
-    $ips += "$ip`：6379"
+    $ips += "$ip`:6379"
 }
 docker exec redis-node-0 redis-cli --cluster create $($ips -join ' ') --cluster-replicas 1 --cluster-yes
 ```
