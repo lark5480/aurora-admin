@@ -248,10 +248,10 @@ public class AuthController {
         Bucket bucket = getLoginBucket(ip);
         log.info("[RateLimit] IP={} availableTokens={} redisAvailable={}", ip, bucket.getAvailableTokens(), redisAvailable);
 
-        // if (!bucket.tryConsume(1)) {
-        //     return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
-        //         .body(ApiResponse.error(429, "登录尝试次数过多，请15分钟后再试"));
-        // }
+        if (!bucket.tryConsume(1)) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .body(ApiResponse.error(429, "登录尝试次数过多，请15分钟后再试"));
+        }
 
         if (redisAvailable) {
             saveBucketCount(getRedisLoginKey(ip), bucket, 900);

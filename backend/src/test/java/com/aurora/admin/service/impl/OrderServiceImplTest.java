@@ -1,17 +1,25 @@
 package com.aurora.admin.service.impl;
 
-import com.aurora.admin.dto.CreateOrderRequest;
-import com.aurora.admin.dto.OrderMessage;
-import com.aurora.admin.dto.OrderQuery;
-import com.aurora.admin.dto.OrderResponse;
-import com.aurora.admin.dto.PageResult;
-import com.aurora.admin.entity.*;
-import com.aurora.admin.exception.BusinessException;
-import com.aurora.admin.exception.ForbiddenException;
-import com.aurora.admin.exception.NotFoundException;
-import com.aurora.admin.mapper.*;
-import com.aurora.admin.service.MessageProducer;
-import com.aurora.admin.util.SecurityUtils;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.math.BigDecimal;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -23,20 +31,29 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 
-import java.math.BigDecimal;
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import com.aurora.admin.dto.CreateOrderRequest;
+import com.aurora.admin.dto.OrderMessage;
+import com.aurora.admin.dto.OrderResponse;
+import com.aurora.admin.entity.Order;
+import com.aurora.admin.entity.OrderItem;
+import com.aurora.admin.entity.Product;
+import com.aurora.admin.entity.ShoppingCart;
+import com.aurora.admin.exception.BusinessException;
+import com.aurora.admin.exception.ForbiddenException;
+import com.aurora.admin.exception.NotFoundException;
+import com.aurora.admin.mapper.OrderItemMapper;
+import com.aurora.admin.mapper.OrderMapper;
+import com.aurora.admin.mapper.ProductMapper;
+import com.aurora.admin.mapper.ProductSkuMapper;
+import com.aurora.admin.mapper.ProductStockMapper;
+import com.aurora.admin.mapper.ShoppingCartMapper;
+import com.aurora.admin.service.MessageProducer;
+import com.aurora.admin.util.SecurityUtils;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("OrderService 单元测试")
 class OrderServiceImplTest {
-
+    
     @Mock private OrderMapper orderMapper;
     @Mock private OrderItemMapper orderItemMapper;
     @Mock private ShoppingCartMapper shoppingCartMapper;
