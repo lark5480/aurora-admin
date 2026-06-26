@@ -1,4 +1,4 @@
-# CLAUDE.md
+# AGENTS.md
 
 ## 技术栈
 - 后端：Java 21, Spring Boot 3, MyBatis-Plus 3, MySQL 8, Redis (Lettuce), RabbitMQ, Elasticsearch 8

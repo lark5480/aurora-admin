@@ -2,6 +2,13 @@
 
 Spring Boot 3 + Vue 3 电商后台管理系统。
 
+展示生产级工程实践的电商后台管理系统，核心设计：
+
+- **可靠消息投递**：RabbitMQ 发件箱模式 + 死信队列 + 补偿任务，保证消息最终一致性
+- **多层降级限流**：Redis Lua 分布式限流 + 本地 Bucket4j 自动降级，限流功能不依赖外部组件
+- **商品搜索**：Elasticsearch 8 + IK 中文分词，启动自动建索引，ES 不可用时透明降级
+- **幂等与并发控制**：Redis 幂等锁 + 乐观锁扣库存，防止重复下单和超卖
+
 ## 新同学看这里
 
 **从 `docs/` 开始，按编号顺序操作，一次搞定所有依赖：**
@@ -75,7 +82,8 @@ backend/  src/main/java/com/aurora/admin/
   filter/       # JWT 过滤器
   task/         # 定时任务
   aspect/       # AOP 切面
-document/       # ES 文档模型
+  document/     # ES 文档模型（ProductDocument）
+
 frontend/  src/
   views/        # 页面组件
   stores/       # Pinia 状态管理
