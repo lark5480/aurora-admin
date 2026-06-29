@@ -19,7 +19,8 @@ public class ApiResponse {
     }
 
     public static ApiResponse success(String message) {
-        return new ApiResponse(200, message, null);
+        // message 和 data 都设为相同值，避免前端 axios 解包后收到 null
+        return new ApiResponse(200, "success", message);
     }
 
     public static ApiResponse error(String message) {
