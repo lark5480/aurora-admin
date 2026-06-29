@@ -75,8 +75,8 @@ let dynamicRoutesReady = false
 router.beforeEach(async (to, _from, next) => {
   const userStore = useUserStore()
 
-  if (userStore.token) {
-    // 有 token 但 menuTree 为空时，尝试重新加载
+  if (userStore.token && to.meta.requiresAuth) {
+    // 仅访问需认证页面时才加载菜单，公开页面（login/register）不触发菜单 API
     if (userStore.menuTree.length === 0) {
       try {
         const { menuApi } = await import('../api/menu')
@@ -92,7 +92,8 @@ router.beforeEach(async (to, _from, next) => {
           }
         }
       } catch {
-        // 加载失败，继续走未认证流程
+        // 菜单加载失败，token 可能已过期，清除登录状态避免重复 403 报错
+        userStore.logout()
       }
     }
 

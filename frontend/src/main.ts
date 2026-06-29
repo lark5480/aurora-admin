@@ -21,8 +21,10 @@ async function init() {
   app.use(createPinia())
 
   // 在 router 初始化之前加载动态路由，避免页面刷新时 "No match found" 警告
+  // 但公开页面（login/register）无需加载菜单，避免因过期 token 触发 403 错误提示
+  const publicPaths = ['/', '/login', '/register']
   const userStore = useUserStore()
-  if (userStore.token) {
+  if (userStore.token && !publicPaths.includes(window.location.pathname)) {
     try {
       const { menuApi } = await import('./api/menu')
       const menuTree = await menuApi.myMenus()
@@ -31,7 +33,8 @@ async function init() {
         setupRouter(menuTree as any)
       }
     } catch {
-      // 预加载失败，beforeEach 守卫会重试
+      // 预加载失败，token 可能已过期，清除避免后续重复 403 报错
+      userStore.logout()
     }
   }
 

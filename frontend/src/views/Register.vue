@@ -181,19 +181,16 @@ const handleRegister = async () => {
     if (valid) {
       loading.value = true
       try {
-        const res = await authApi.register({
+        await authApi.register({
           username: form.username,
           password: form.password,
           email: form.email,
         })
-        if (res.data.code === 200) {
-          ElMessage.success('Account created! Please sign in.')
-          router.push('/login')
-        } else {
-          ElMessage.error(res.data.message || 'Registration failed')
-        }
-      } catch (error) {
-        ElMessage.error(error.response?.data?.message || 'Registration failed')
+        // axios 响应拦截器已处理非 200 状态码，走到这里即表示注册成功
+        ElMessage.success('Account created! Please sign in.')
+        router.push('/login')
+      } catch (error: any) {
+        ElMessage.error(error?.message || error?.response?.data?.message || 'Registration failed')
       } finally {
         loading.value = false
       }
@@ -466,6 +463,7 @@ const goToLogin = () => {
   position: relative;
   display: flex;
   align-items: center;
+  width: 100%;
 }
 
 .input-icon {
@@ -741,6 +739,11 @@ const goToLogin = () => {
   .register-btn,
   .loading-dots span {
     animation: none;
+  }
+
+  .glass-card {
+    opacity: 1;
+    transform: none;
   }
 
   .custom-input :deep(.el-input__wrapper),
