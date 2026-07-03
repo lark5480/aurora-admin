@@ -15,6 +15,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * 商品分类服务实现。递归构建分类树、创建/更新分类时维护层级关系，删除时校验子分类约束。
+ */
 @Service
 @RequiredArgsConstructor
 public class ProductCategoryServiceImpl implements ProductCategoryService {

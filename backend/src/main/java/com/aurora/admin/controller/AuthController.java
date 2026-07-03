@@ -34,6 +34,20 @@ import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
+/**
+ * 认证控制器。处理用户注册、登录、退出等认证流程。
+ *
+ * <ul>
+ *   <li>注册：每小时每 IP 限流 3 次，支持总开关配置，默认分配 ROLE_USER。</li>
+ *   <li>登录：每 15 分钟每 IP 限流 5 次，支持用户名/邮箱登录，返回 JWT token。</li>
+ *   <li>退出：将 token 加入 Redis 黑名单，剩余有效期后自动过期。</li>
+ * </ul>
+ *
+ * <p>所有接口无需鉴权，限流基于 Bucket4j（Redis 或本地内存回退）。</p>
+ *
+ * @see UserService
+ * @see JwtUtil
+ */
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {

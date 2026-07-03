@@ -19,6 +19,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 统计服务实现类。基于 StatsMapper 实时查询统计数据，支持管理员与普通用户的分权查询；
+ * 同时利用 t_daily_stats 预聚合表缓存历史数据，优化长时间跨度的趋势查询性能。
+ */
 @Service
 public class StatsServiceImpl implements StatsService {
 

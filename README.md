@@ -38,21 +38,25 @@ docs/
 
 ## 快速启动
 
-### 一键启动全部中间件（推荐）
+### 方式一：本地开发（推荐）
+
+**只启动中间件**，后端和前端在本地 IDE 里运行，方便调试和热更新：
 
 ```bash
+# 终端 1：启动中间件（MySQL + Redis + RabbitMQ + ES，后台运行）
 docker compose up mysql redis rabbitmq elasticsearch -d
-```
 
-然后启动后端和前端：
-
-```bash
-# 后端 — 默认激活 dev 配置，启动在 8080
+# 终端 2：启动后端（Java 21 + Spring Boot 3，端口 8080）
 cd backend && mvn spring-boot:run
 
-# 前端 — 启动在 3001
+# 终端 3：启动前端（Vite 开发服务器，端口 3001）
 cd frontend && npm install && npm run dev
 ```
+
+> 后端在 IntelliJ IDEA 中打开 `backend/` 目录，运行 `AuroraAdminApplication.java` 效果相同。  
+> `application-dev.yml` 的连接参数默认值已对齐 docker-compose 的中间件配置，开箱即用。
+
+### 方式二：全容器化（演示/部署）
 
 ### 全部容器化（演示/部署）
 

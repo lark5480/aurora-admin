@@ -20,6 +20,11 @@ import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * 购物车服务实现。提供购物车增删改查、SKU 切换及合并逻辑。
+ * 操作前校验商品状态（下架/库存不足禁止加购）、校验购物车记录归属权。
+ * SKU 切换时自动合并同一商品+新 SKU 的已有记录数量，避免重复。
+ */
 @Service
 @RequiredArgsConstructor
 public class ShoppingCartServiceImpl implements ShoppingCartService {

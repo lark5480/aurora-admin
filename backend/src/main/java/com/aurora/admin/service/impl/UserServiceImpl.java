@@ -19,6 +19,20 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+/**
+ * 用户服务实现类。提供用户注册、查询、更新、删除、角色分配等业务逻辑。
+ *
+ * <ul>
+ *   <li>注册时自动加密密码（BCrypt）并分配默认角色。</li>
+ *   <li>更新操作仅修改非空字段，不影响其他字段值。</li>
+ *   <li>角色分配采用先清空后插入的策略。</li>
+ *   <li>修改密码需校验旧密码正确性。</li>
+ * </ul>
+ *
+ * @see UserService
+ * @see UserMapper
+ * @see PasswordEncoder
+ */
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {

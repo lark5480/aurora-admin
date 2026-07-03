@@ -19,11 +19,17 @@ public interface PaymentService {
 
     /**
      * 根据订单ID查询支付记录
+     *
+     * @param orderId 订单 ID
+     * @return 该订单的支付记录列表
      */
     List<PaymentResponse> getPaymentByOrderId(Long orderId);
 
     /**
      * 根据订单号查询支付记录
+     *
+     * @param orderNo 订单号（字符串格式）
+     * @return 该订单的支付记录列表
      */
     List<PaymentResponse> getPaymentByOrderNo(String orderNo);
 }

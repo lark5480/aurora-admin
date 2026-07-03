@@ -31,6 +31,10 @@ import com.aurora.admin.util.SecurityUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * 订单管理控制器。提供订单的创建、分页查询、Excel 导出、详情查询、取消、发货、
+ * 确认收货、批量删除等接口。所有接口需登录访问，部分接口要求 ADMIN/SUPER_ADMIN 权限。
+ */
 @RestController
 @RequestMapping("/api/orders")
 @RequiredArgsConstructor
@@ -39,6 +43,12 @@ public class OrderController {
 
     private final OrderService orderService;
 
+    /**
+     * 创建订单。从购物车选中商品创建新订单，限流 5次/分钟。
+     *
+     * @param request 创建订单请求（含商品 SKU、数量等信息）
+     * @return 创建的订单详情
+     */
     @RateLimit(key = KeyType.USER, limit = 5, duration = 60)
     @PostMapping
     public ApiResponse createOrder(@Valid @RequestBody CreateOrderRequest request) {
@@ -47,6 +57,16 @@ public class OrderController {
         return ApiResponse.success(order);
     }
 
+    /**
+     * 分页查询订单列表。管理员可查全部订单，普通用户仅查自己的订单。
+     *
+     * @param page     页码（默认 1）
+     * @param size     每页条数（默认 10）
+     * @param status   订单状态筛选（可选）
+     * @param orderNo  订单号筛选（可选）
+     * @param username 用户名筛选（可选，仅管理员有效）
+     * @return 分页订单结果
+     */
     @GetMapping
     public ApiResponse getOrderPage(
             @RequestParam(defaultValue = "1") Integer page,
@@ -60,6 +80,14 @@ public class OrderController {
         return ApiResponse.success(result);
     }
 
+    /**
+     * 导出订单 Excel 文件。根据筛选条件导出，管理员可导出全部订单。
+     *
+     * @param status   订单状态筛选（可选）
+     * @param orderNo  订单号筛选（可选）
+     * @param username 用户名筛选（可选，仅管理员有效）
+     * @return Excel 文件字节流响应（Content-Disposition 附件下载）
+     */
     @GetMapping("/export")
     public ResponseEntity<byte[]> exportOrders(
             @RequestParam(required = false) String status,
@@ -76,6 +104,12 @@ public class OrderController {
                 .body(excel);
     }
 
+    /**
+     * 获取订单详情。根据订单 ID 查询，普通用户仅可查自己的订单。
+     *
+     * @param id 订单 ID
+     * @return 订单详情
+     */
     @GetMapping("/{id}")
     public ApiResponse getOrderDetail(@PathVariable Long id) {
         Long userId = SecurityUtils.isCurrentUserAdmin() ? null : SecurityUtils.getCurrentUserId();
@@ -83,6 +117,12 @@ public class OrderController {
         return ApiResponse.success(order);
     }
 
+    /**
+     * 取消订单。用户取消自己的订单，仅 PENDING 状态允许操作，限流 10次/分钟。
+     *
+     * @param id 订单 ID
+     * @return 取消成功提示
+     */
     @RateLimit(key = KeyType.USER, limit = 10, duration = 60)
     @PatchMapping("/{id}/cancel")
     public ApiResponse cancelOrder(@PathVariable Long id) {
@@ -93,6 +133,12 @@ public class OrderController {
 
     // 支付统一走 PaymentController（POST /api/payments），此处不再提供 payOrder 入口
 
+    /**
+     * 发货。管理员权限，将订单标记为已发货，限流 10次/分钟。
+     *
+     * @param id 订单 ID
+     * @return 发货成功提示
+     */
     @RateLimit(key = KeyType.USER, limit = 10, duration = 60)
     @PatchMapping("/{id}/ship")
     @PreAuthorize("hasAnyRole('ADMIN','SUPER_ADMIN')")
@@ -101,6 +147,12 @@ public class OrderController {
         return ApiResponse.success("发货成功");
     }
 
+    /**
+     * 确认收货。用户确认自己的订单已收货，仅 SHIPPED 状态允许操作，限流 10次/分钟。
+     *
+     * @param id 订单 ID
+     * @return 确认收货成功提示
+     */
     @RateLimit(key = KeyType.USER, limit = 10, duration = 60)
     @PatchMapping("/{id}/confirm")
     public ApiResponse confirmOrder(@PathVariable Long id) {
@@ -109,6 +161,13 @@ public class OrderController {
         return ApiResponse.success("确认收货成功");
     }
 
+    /**
+     * 批量删除已取消的订单。仅删除 CANCELLED 状态的订单，其他状态自动跳过，
+     * 管理员可删除全部用户的订单，普通用户仅可删除自己的订单，限流 10次/分钟。
+     *
+     * @param body 请求体（含 ids 数组，如 {"ids": [1, 2, 3]}）
+     * @return 删除结果提示（含实际删除数与跳过的数量）
+     */
     @RateLimit(key = KeyType.USER, limit = 10, duration = 60)
     @DeleteMapping("/batch")
     public ApiResponse batchDelete(@RequestBody Map<String, Object> body) {

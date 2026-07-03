@@ -9,31 +9,51 @@ public interface OrderService {
 
     /**
      * 创建订单（从购物车下单）
+     *
+     * @param userId  当前用户 ID
+     * @param request 创建订单请求（含商品 SKU、数量等信息）
+     * @return 创建的订单详情
      */
     OrderResponse createOrder(Long userId, CreateOrderRequest request);
 
     /**
      * 分页查询用户订单
+     *
+     * @param userId 当前用户 ID，null 表示管理员（查全部）
+     * @param query  分页查询条件（含状态、订单号、用户名筛选）
+     * @return 分页订单结果
      */
     PageResult<OrderResponse> getOrderPage(Long userId, OrderQuery query);
 
     /**
      * 查询订单详情（含明细）
+     *
+     * @param userId  当前用户 ID，null 表示管理员
+     * @param orderId 订单 ID
+     * @return 订单详情
      */
     OrderResponse getOrderDetail(Long userId, Long orderId);
 
     /**
      * 取消订单（PENDING → CANCELLED）
+     *
+     * @param userId  当前用户 ID
+     * @param orderId 订单 ID
      */
     void cancelOrder(Long userId, Long orderId);
 
     /**
      * 发货（PAID → SHIPPED），管理员操作
+     *
+     * @param orderId 订单 ID
      */
     void shipOrder(Long orderId);
 
     /**
      * 确认收货（SHIPPED → COMPLETED）
+     *
+     * @param userId  当前用户 ID
+     * @param orderId 订单 ID
      */
     void confirmOrder(Long userId, Long orderId);
 

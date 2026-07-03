@@ -25,6 +25,11 @@ import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * 商品搜索服务实现。基于 Spring Data Elasticsearch 和原生查询构建 ES 搜索逻辑，
+ * 提供关键词搜索、分类/状态筛选、文档索引、全量重建和索引删除功能。
+ * 数据源来自 MySQL（商品表、分类表），通过 ProductDocument 映射到 ES 文档。
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor

@@ -1,6 +1,6 @@
 # Aurora Admin — 中间件 + 应用容器化
-# 只启动中间件（本地跑后端/前端）：docker compose up mysql redis rabbitmq elasticsearch -d
-# 全容器化部署启动: docker compose up -d
+# 方式一【推荐】只启中间件，IDE 本地跑前后端：docker compose up mysql redis rabbitmq elasticsearch -d
+# 方式二       全容器化部署：docker compose up -d
 # 日志: docker compose logs -f
 # 停止: docker compose down
 # 清理: docker compose down -v (删除数据卷)
@@ -17,8 +17,6 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: root123
       MYSQL_DATABASE: aurora_admin
-      MYSQL_CHARSET: utf8mb4
-      MYSQL_COLLATION: utf8mb4_unicode_ci
       TZ: Asia/Shanghai
     volumes:
       - mysql_data:/var/lib/mysql

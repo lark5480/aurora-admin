@@ -16,6 +16,11 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
+/**
+ * 用户地址服务实现类。
+ * 管理当前登录用户的收货地址，包括新增、更新、删除及默认地址设置，
+ * 所有操作均校验地址归属，确保只能操作当前用户自己的地址。
+ */
 public class UserAddressServiceImpl implements UserAddressService {
 
     private final UserAddressMapper addressMapper;

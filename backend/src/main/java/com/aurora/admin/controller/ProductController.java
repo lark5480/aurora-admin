@@ -26,6 +26,11 @@ import com.aurora.admin.service.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * 商品管理控制器。提供商品的分页查询、详情查看、创建、更新、状态修改及删除功能。
+ * 管理端操作（增、改、状态、删）需要 ADMIN 或 SUPER_ADMIN 权限，并受速率限制 (10次/60秒)。
+ * 映射路径：/api/products
+ */
 @RestController
 @RequestMapping("/api/products")
 @RequiredArgsConstructor
@@ -33,6 +38,16 @@ public class ProductController {
 
     private final ProductService productService;
 
+    /**
+     * 分页查询商品列表。支持按关键词、分类、状态过滤。
+     *
+     * @param page      页码，从 1 开始，默认 1
+     * @param size      每页条数，默认 10
+     * @param keyword   搜索关键词（商品名称模糊匹配），默认空字符串
+     * @param categoryId 分类 ID，可选
+     * @param status    商品状态（ON_SALE / OFF_SHELF），默认空字符串（全部）
+     * @return 分页结果，包含商品列表及总记录数
+     */
     @GetMapping
     public ApiResponse getPage(
             @RequestParam(defaultValue = "1") Integer page,
@@ -45,12 +60,24 @@ public class ProductController {
         return ApiResponse.success(result);
     }
 
+    /**
+     * 根据 ID 获取商品详情。
+     *
+     * @param id 商品 ID
+     * @return 商品详情响应
+     */
     @GetMapping("/{id}")
     public ApiResponse getById(@PathVariable Long id) {
         ProductResponse product = productService.getById(id);
         return ApiResponse.success(product);
     }
 
+    /**
+     * 创建商品。仅 ADMIN 或 SUPER_ADMIN 可操作，限流 10次/60秒。
+     *
+     * @param request 商品创建请求，包含名称、价格、分类、描述等信息，需通过 Bean Validation
+     * @return 创建成功的商品详情
+     */
     @RateLimit(key = KeyType.USER, limit = 10, duration = 60)
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN','SUPER_ADMIN')")
@@ -59,6 +86,13 @@ public class ProductController {
         return ApiResponse.success(product);
     }
 
+    /**
+     * 更新指定商品的完整信息。仅 ADMIN 或 SUPER_ADMIN 可操作，限流 10次/60秒。
+     *
+     * @param id      商品 ID
+     * @param request 商品更新请求，包含需要修改的字段，需通过 Bean Validation
+     * @return 更新后的商品详情
+     */
     @RateLimit(key = KeyType.USER, limit = 10, duration = 60)
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN','SUPER_ADMIN')")
@@ -67,6 +101,14 @@ public class ProductController {
         return ApiResponse.success(product);
     }
 
+    /**
+     * 更新单个商品的状态。支持 "ON"/"ON_SALE" → 上架，"OFF"/"OFF_SHELF" → 下架。
+     * 仅 ADMIN 或 SUPER_ADMIN 可操作，限流 10次/60秒。
+     *
+     * @param id   商品 ID
+     * @param body 请求体，需包含 "status" 字段（ON / ON_SALE / OFF / OFF_SHELF）
+     * @return 更新结果
+     */
     @RateLimit(key = KeyType.USER, limit = 10, duration = 60)
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasAnyRole('ADMIN','SUPER_ADMIN')")
@@ -80,6 +122,13 @@ public class ProductController {
         return ApiResponse.success("更新成功");
     }
 
+    /**
+     * 批量更新商品状态。支持 "ON"/"ON_SALE" → 上架，"OFF"/"OFF_SHELF" → 下架。
+     * 仅 ADMIN 或 SUPER_ADMIN 可操作，限流 10次/60秒。
+     *
+     * @param body 请求体，需包含 "ids"（商品 ID 列表）和 "status" 字段
+     * @return 批量操作结果
+     */
     @RateLimit(key = KeyType.USER, limit = 10, duration = 60)
     @PatchMapping("/batch-status")
     @PreAuthorize("hasAnyRole('ADMIN','SUPER_ADMIN')")
@@ -116,6 +165,12 @@ public class ProductController {
         };
     }
 
+    /**
+     * 删除指定商品。仅 ADMIN 或 SUPER_ADMIN 可操作，限流 10次/60秒。
+     *
+     * @param id 商品 ID
+     * @return 删除结果
+     */
     @RateLimit(key = KeyType.USER, limit = 10, duration = 60)
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN','SUPER_ADMIN')")

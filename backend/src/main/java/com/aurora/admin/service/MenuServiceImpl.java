@@ -15,6 +15,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * 菜单管理服务实现。提供菜单的增删改查、父子树形组装、当前角色菜单过滤、
+ * 权限标识提取以及删除操作日志记录等功能。
+ */
 @Service
 public class MenuServiceImpl implements MenuService {
 
