@@ -19,6 +19,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 消息管理服务实现。提供消息的增删改查、已读状态管理功能，
+ * 通过 WebSocket 实时推送新消息和状态变更通知，删除操作自动记录操作日志。
+ */
 @Service
 public class MessageServiceImpl implements MessageService {
 

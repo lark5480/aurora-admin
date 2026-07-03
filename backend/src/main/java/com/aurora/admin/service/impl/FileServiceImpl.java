@@ -5,7 +5,9 @@ import com.aurora.admin.entity.FileRecord;
 import com.aurora.admin.mapper.FileMapper;
 import com.aurora.admin.service.FileService;
 import com.aurora.admin.util.SecurityUtils;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +23,12 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * 文件管理服务实现。处理文件上传落盘、权限校验、路径穿越防护、逻辑删除及下载计数等业务逻辑。
+ * 上传时按日期分目录存储（yyyy/MM/dd），文件重命名为 UUID 防止冲突；
+ * 若数据库写入失败，自动清理已落盘的孤儿文件，保证数据一致性。
+ */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class FileServiceImpl implements FileService {
@@ -33,6 +41,24 @@ public class FileServiceImpl implements FileService {
 
     @Value("${file.upload-dir}")
     private String uploadDir;
+
+    /**
+     * 初始化上传目录。将相对路径转为绝对路径，确保目录可写。
+     */
+    @PostConstruct
+    public void init() {
+        Path path = Paths.get(uploadDir);
+        if (!path.isAbsolute()) {
+            path = path.toAbsolutePath().normalize();
+            uploadDir = path.toString();
+        }
+        try {
+            Files.createDirectories(path);
+            log.info("文件上传目录: {}", uploadDir);
+        } catch (IOException e) {
+            log.error("创建上传目录失败: {}", uploadDir, e);
+        }
+    }
 
     @Override
     public FileRecord uploadFile(MultipartFile file, Long userId, String username) throws IOException {

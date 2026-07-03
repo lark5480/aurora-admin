@@ -12,6 +12,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * 角色管理服务实现。处理角色的增删改查、系统内置角色保护及菜单权限分配。
+ * 系统内置角色（isSystem=1）禁止修改和删除，权限分配使用全量覆盖策略。
+ */
 @Service
 public class RoleServiceImpl implements RoleService {
 
@@ -53,6 +57,7 @@ public class RoleServiceImpl implements RoleService {
         if (existing == null) {
             throw new RuntimeException("角色不存在");
         }
+        // 系统内置角色禁止修改
         if (existing.getIsSystem() != null && existing.getIsSystem() == 1) {
             throw new RuntimeException("系统内置角色不可修改");
         }
@@ -67,6 +72,7 @@ public class RoleServiceImpl implements RoleService {
         if (role == null) {
             throw new RuntimeException("角色不存在");
         }
+        // 系统内置角色禁止删除
         if (role.getIsSystem() != null && role.getIsSystem() == 1) {
             throw new RuntimeException("系统内置角色不可删除");
         }
@@ -93,6 +99,7 @@ public class RoleServiceImpl implements RoleService {
         if (role == null) {
             throw new RuntimeException("角色不存在");
         }
+        // 系统内置角色禁止修改权限
         if (role.getIsSystem() != null && role.getIsSystem() == 1) {
             throw new RuntimeException("系统内置角色不可修改权限");
         }

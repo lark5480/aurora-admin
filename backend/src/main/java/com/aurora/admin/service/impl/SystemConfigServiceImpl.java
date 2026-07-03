@@ -9,6 +9,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+/**
+ * 系统配置服务实现类。基于 MyBatis-Plus Mapper 完成系统配置的 CRUD 操作，
+ * 支持按可见性查询、按键精确查找，以及更新时自动创建不存在的配置。
+ */
 @Service
 public class SystemConfigServiceImpl implements SystemConfigService {
 

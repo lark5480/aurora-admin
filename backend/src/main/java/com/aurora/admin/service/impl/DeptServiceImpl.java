@@ -20,6 +20,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * 部门服务实现类。提供部门扁平/树形查询、增删改操作，同步维护部门负责人用户信息，
+ * 并在删除时记录操作日志。
+ */
 @Service
 public class DeptServiceImpl implements DeptService {
 

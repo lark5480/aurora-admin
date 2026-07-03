@@ -1,11 +1,13 @@
 -- ========================================
 -- Aurora Admin 数据库初始化脚本
 -- ========================================
-CREATE DATABASE IF NOT EXISTS aurora_admin
-    DEFAULT CHARACTER SET utf8mb4
-    DEFAULT COLLATE utf8mb4_unicode_ci;
+-- Docker 入口脚本已先于本脚本创建数据库（不含 charset），所以必须 ALTER
+ALTER DATABASE aurora_admin DEFAULT CHARACTER SET utf8mb4 DEFAULT COLLATE utf8mb4_unicode_ci;
 
 USE aurora_admin;
+
+-- 明确设置连接字符集，避免入口脚本执行时因 locale 非 UTF-8 导致中文乱码
+SET NAMES utf8mb4;
 
 -- ========================================
 -- 用户表

@@ -24,6 +24,11 @@ import com.aurora.admin.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * 商品管理服务实现。处理商品的分页查询、详情查询、创建、更新、上下架和删除。
+ * 创建和更新时自动计算 SKU 库存之和作为商品总库存，并同步商品数据到 Elasticsearch 索引。
+ * 上下架和删除时同步更新 ES 索引。
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -67,6 +72,10 @@ public class ProductServiceImpl implements ProductService {
         return toDetailResponse(product, skus);
     }
 
+    /**
+     * 创建商品及 SKU。创建后自动计算各 SKU 库存之和作为商品总库存，
+     * 并同步商品数据到 Elasticsearch 索引。
+     */
     @Override
     @Transactional
     public ProductResponse create(ProductRequest request) {
@@ -94,6 +103,11 @@ public class ProductServiceImpl implements ProductService {
         return toDetailResponse(product, skus);
     }
 
+    /**
+     * 更新商品及 SKU。上架中的商品不允许编辑（须先下架）。
+     * 更新策略：先删除原有 SKU 再全量插入新 SKU，重新计算总库存，
+     * 最后同步到 Elasticsearch。
+     */
     @Override
     @Transactional
     public ProductResponse update(Long id, ProductRequest request) {
@@ -132,6 +146,10 @@ public class ProductServiceImpl implements ProductService {
         return toDetailResponse(product, skus);
     }
 
+    /**
+     * 更新商品上下架状态。上架时同步商品到 Elasticsearch，
+     * 下架时从 Elasticsearch 删除索引。
+     */
     @Override
     @Transactional
     public void updateStatus(Long id, String status) {
@@ -152,6 +170,10 @@ public class ProductServiceImpl implements ProductService {
         }
     }
 
+    /**
+     * 批量更新商品上下架状态。逐条同步 Elasticsearch 索引：
+     * 上架时添加索引，下架时删除索引。
+     */
     @Override
     @Transactional
     public void batchUpdateStatus(java.util.List<Long> ids, String status) {
@@ -173,6 +195,10 @@ public class ProductServiceImpl implements ProductService {
         }
     }
 
+    /**
+     * 软删除商品。上架中的商品不允许删除（须先下架），
+     * 删除后同步从 Elasticsearch 移除索引。
+     */
     @Override
     @Transactional
     public void delete(Long id) {

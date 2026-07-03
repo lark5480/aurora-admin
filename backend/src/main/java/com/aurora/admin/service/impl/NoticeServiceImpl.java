@@ -24,6 +24,10 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * 公告管理服务实现。提供公告的增删改查、发布撤回、定时发布与过期处理、用户可见范围过滤等业务逻辑。
+ * 公告状态流转：DRAFT -> PUBLISHED -> EXPIRED / WITHDRAWN，WITHDRAWN 可重新发布为 PUBLISHED。
+ */
 @Service
 @RequiredArgsConstructor
 public class NoticeServiceImpl implements NoticeService {

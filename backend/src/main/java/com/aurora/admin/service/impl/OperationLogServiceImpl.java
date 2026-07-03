@@ -10,6 +10,10 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+/**
+ * 操作日志服务实现类。基于 MyBatis-Plus Mapper 完成日志的 CRUD 操作，
+ * 支持的查询维度：全量分页查询和按日期范围筛选。
+ */
 @Service
 public class OperationLogServiceImpl implements OperationLogService {
 
@@ -45,6 +49,12 @@ public class OperationLogServiceImpl implements OperationLogService {
         return operationLogMapper.countByDateRange(startDate, endDate);
     }
 
+    /**
+     * 清理日志：计算当前时间向前 N 天的截止时间点，删除该时间之前的所有日志。
+     * 格式化为 yyyy-MM-dd HH:mm:ss 后传给 Mapper 执行物理删除。
+     *
+     * @param days 保留最近 N 天的日志
+     */
     @Override
     public void cleanOldLogs(int days) {
         LocalDateTime beforeTime = LocalDateTime.now().minusDays(days);

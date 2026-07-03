@@ -26,6 +26,9 @@ import com.aurora.admin.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * 售后管理服务实现。负责售后申请的创建与审核流程，包含退款处理、库存恢复、订单状态变更及 MQ 消息通知。
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -362,6 +365,9 @@ public class AfterSaleServiceImpl implements AfterSaleService {
         );
     }
 
+    /**
+     * 恢复商品库存。有 SKU 时恢复 SKU 库存并刷新商品总库存，无 SKU 时直接恢复商品库存。
+     */
     private void restoreStock(OrderItem item) {
         if (item.getSkuId() != null) {
             productStockMapper.restoreSkuStock(item.getSkuId(), item.getQuantity());
@@ -371,6 +377,9 @@ public class AfterSaleServiceImpl implements AfterSaleService {
         }
     }
 
+    /**
+     * 发送售后 MQ 消息。发送订单通知消息到消息队列，失败仅记录警告日志，不抛出异常。
+     */
     private void sendAfterSaleMq(String orderNo, Long userId, String type, String message) {
         try {
             messageProducer.sendOrderNotification(new OrderMessage(
@@ -385,6 +394,9 @@ public class AfterSaleServiceImpl implements AfterSaleService {
         }
     }
 
+    /**
+     * 生成售后单号。格式：AS + yyyyMMddHHmmss + 6位随机数。
+     */
     private String generateAfterSaleNo() {
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
         int random = ThreadLocalRandom.current().nextInt(100000, 1000000);

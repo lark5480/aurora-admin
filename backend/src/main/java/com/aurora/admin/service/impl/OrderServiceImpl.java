@@ -44,6 +44,10 @@ import com.aurora.admin.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * 订单服务实现。提供订单创建、查询、取消、发货、确认收货、批量删除及导出功能。
+ * 创建订单时包含 Redis 幂等校验、乐观锁扣库存、购物车清理及 MQ 异步通知等内部逻辑。
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -58,6 +62,10 @@ public class OrderServiceImpl implements OrderService {
     private final MessageProducer messageProducer;
     private final org.springframework.data.redis.core.StringRedisTemplate redisTemplate;
 
+    /**
+     * 创建订单。内部包含 Redis 幂等检查防止重复提交、乐观锁扣减库存、
+     * 清理购物车已结算商品、异步 MQ 通知等逻辑。异常时自动删除幂等 Key 以允许重试。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public OrderResponse createOrder(Long userId, CreateOrderRequest request) {
