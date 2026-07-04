@@ -28,8 +28,8 @@ export const orderApi = {
     receiverPhone: string
     receiverAddress: string
     remark?: string
-  }) {
-    return api.post('/orders', data)
+  }, idempotentKey: string) {
+    return api.post('/orders', data, { headers: { 'Idempotent-Key': idempotentKey } })
   },
   list(params: { page: number; size: number; status?: string; orderNo?: string; username?: string }) {
     return api.get('/orders', { params })
