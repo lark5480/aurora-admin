@@ -10,11 +10,12 @@ public interface OrderService {
     /**
      * 创建订单（从购物车下单）
      *
-     * @param userId  当前用户 ID
-     * @param request 创建订单请求（含商品 SKU、数量等信息）
+     * @param userId         当前用户 ID
+     * @param request        创建订单请求（含商品 SKU、数量等信息）
+     * @param idempotentKey  客户端传入的幂等 Key（UUID），用于防重复提交
      * @return 创建的订单详情
      */
-    OrderResponse createOrder(Long userId, CreateOrderRequest request);
+    OrderResponse createOrder(Long userId, CreateOrderRequest request, String idempotentKey);
 
     /**
      * 分页查询用户订单

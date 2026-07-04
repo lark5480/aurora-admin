@@ -68,17 +68,11 @@ public class OrderServiceImpl implements OrderService {
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public OrderResponse createOrder(Long userId, CreateOrderRequest request) {
-        // 0. 幂等检查：防止重复提交订单
-        List<Long> sortedIds = request.cartItemIds().stream()
-                .<Long>mapMulti((id, sink) -> {
-                    if (id instanceof Number n) sink.accept(n.longValue());
-                })
-                .sorted()
-                .toList();
-        String idempotentKey = "order:idempotent:" + userId + ":" + sortedIds.hashCode();
+    public OrderResponse createOrder(Long userId, CreateOrderRequest request, String idempotentKey) {
+        // 0. 幂等检查：防止重复提交订单（Idempotent-Key 由客户端传入）
+        String redisKey = "order:idempotent:" + userId + ":" + idempotentKey;
         Boolean acquired = redisTemplate.opsForValue()
-                .setIfAbsent(idempotentKey, "1", Duration.ofMinutes(10));
+                .setIfAbsent(redisKey, "1", Duration.ofMinutes(10));
         if (Boolean.FALSE.equals(acquired)) {
             throw new BusinessException("请勿重复提交订单");
         }
@@ -213,10 +207,13 @@ public class OrderServiceImpl implements OrderService {
             shoppingCartMapper.deleteById(cartId);
         }
 
-        // 8. 异步发送订单通知
+        // 8. 标记幂等 Key 为已完成（防止超时后重复提交）
+        redisTemplate.opsForValue().set(redisKey, "success", Duration.ofMinutes(10));
+
+        // 9. 异步发送订单通知
         sendOrderMq(order, "ORDER_CREATED", "订单创建成功，金额：" + total);
 
-        // 9. 构建响应
+        // 10. 构建响应
         List<OrderItemResponse> itemResponses = orderItems.stream()
                 .map(item -> new OrderItemResponse(
                         null,
@@ -236,7 +233,7 @@ public class OrderServiceImpl implements OrderService {
                 request.remark(), null, order.getCreateTime(), itemResponses);
         } catch (Exception e) {
             // 异常时删除幂等 Key，允许用户重试
-            redisTemplate.delete(idempotentKey);
+            redisTemplate.delete(redisKey);
             throw e;
         }
     }

@@ -154,7 +154,8 @@ export const useOrderStore = defineStore('order', () => {
     remark?: string
   }) {
     try {
-      await orderApi.create(data)
+      const idempotentKey = crypto.randomUUID()
+      await orderApi.create(data, idempotentKey)
       // 下单成功后重新拉购物车（不再直接清空，因为可能只结算了部分商品）
       await fetchCart()
       ElMessage.success('下单成功')

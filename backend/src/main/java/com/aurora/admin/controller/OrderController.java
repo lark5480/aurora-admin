@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -45,15 +46,19 @@ public class OrderController {
 
     /**
      * 创建订单。从购物车选中商品创建新订单，限流 5次/分钟。
+     * 客户端需传入 Idempotent-Key（UUID）用于防重复提交。
      *
-     * @param request 创建订单请求（含商品 SKU、数量等信息）
+     * @param request       创建订单请求（含商品 SKU、数量等信息）
+     * @param idempotentKey 幂等 Key（UUID），由客户端生成，用于防止重复提交
      * @return 创建的订单详情
      */
     @RateLimit(key = KeyType.USER, limit = 5, duration = 60)
     @PostMapping
-    public ApiResponse createOrder(@Valid @RequestBody CreateOrderRequest request) {
+    public ApiResponse createOrder(
+            @Valid @RequestBody CreateOrderRequest request,
+            @RequestHeader("Idempotent-Key") String idempotentKey) {
         Long userId = SecurityUtils.getCurrentUserId();
-        OrderResponse order = orderService.createOrder(userId, request);
+        OrderResponse order = orderService.createOrder(userId, request, idempotentKey);
         return ApiResponse.success(order);
     }
 

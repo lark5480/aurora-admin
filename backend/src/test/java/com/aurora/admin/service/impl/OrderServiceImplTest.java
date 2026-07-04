@@ -121,7 +121,7 @@ class OrderServiceImplTest {
                 });
                 when(productStockMapper.deductProductStock(1L, 2)).thenReturn(1);
 
-                OrderResponse response = orderService.createOrder(1L, buildRequest());
+                OrderResponse response = orderService.createOrder(1L, buildRequest(), "test-idempotent-key");
 
                 assertThat(response.orderNo()).isNotNull();
                 assertThat(response.status()).isEqualTo("PENDING");
@@ -142,7 +142,7 @@ class OrderServiceImplTest {
             when(redisTemplate.opsForValue()).thenReturn(valueOps);
             when(valueOps.setIfAbsent(anyString(), anyString(), any(Duration.class))).thenReturn(false);
 
-            assertThatThrownBy(() -> orderService.createOrder(1L, buildRequest()))
+            assertThatThrownBy(() -> orderService.createOrder(1L, buildRequest(), "test-idempotent-key"))
                     .isInstanceOf(BusinessException.class)
                     .hasMessageContaining("请勿重复提交");
         }
@@ -153,7 +153,7 @@ class OrderServiceImplTest {
             mockRedisIdempotentSuccess();
             when(shoppingCartMapper.findByUserId(1L)).thenReturn(Collections.emptyList());
 
-            assertThatThrownBy(() -> orderService.createOrder(1L, buildRequest()))
+            assertThatThrownBy(() -> orderService.createOrder(1L, buildRequest(), "test-idempotent-key"))
                     .isInstanceOf(BusinessException.class)
                     .hasMessageContaining("购物车为空");
 
@@ -168,7 +168,7 @@ class OrderServiceImplTest {
             when(shoppingCartMapper.findByUserId(1L)).thenReturn(List.of(cartItem));
             when(productMapper.findById(1L)).thenReturn(onSaleProduct);
 
-            assertThatThrownBy(() -> orderService.createOrder(1L, buildRequest()))
+            assertThatThrownBy(() -> orderService.createOrder(1L, buildRequest(), "test-idempotent-key"))
                     .isInstanceOf(BusinessException.class)
                     .hasMessageContaining("商品已下架");
 
@@ -183,7 +183,7 @@ class OrderServiceImplTest {
             when(shoppingCartMapper.findByUserId(1L)).thenReturn(List.of(cartItem));
             when(productMapper.findById(1L)).thenReturn(onSaleProduct);
 
-            assertThatThrownBy(() -> orderService.createOrder(1L, buildRequest()))
+            assertThatThrownBy(() -> orderService.createOrder(1L, buildRequest(), "test-idempotent-key"))
                     .isInstanceOf(BusinessException.class)
                     .hasMessageContaining("库存不足");
 
@@ -207,7 +207,7 @@ class OrderServiceImplTest {
                 });
                 when(productStockMapper.deductProductStock(1L, 2)).thenReturn(0); // 乐观锁失败
 
-                assertThatThrownBy(() -> orderService.createOrder(1L, buildRequest()))
+                assertThatThrownBy(() -> orderService.createOrder(1L, buildRequest(), "test-idempotent-key"))
                         .isInstanceOf(BusinessException.class)
                         .hasMessageContaining("库存不足");
             }
