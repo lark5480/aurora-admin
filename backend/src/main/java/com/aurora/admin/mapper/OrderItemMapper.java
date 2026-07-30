@@ -3,6 +3,7 @@ package com.aurora.admin.mapper;
 import com.aurora.admin.entity.OrderItem;
 import org.apache.ibatis.annotations.*;
 
+import java.util.Collection;
 import java.util.List;
 
 @Mapper
@@ -24,4 +25,14 @@ public interface OrderItemMapper {
 
     @Update("UPDATE t_order_item SET refund_status = #{refundStatus} WHERE id = #{id}")
     int updateRefundStatus(@Param("id") Long id, @Param("refundStatus") String refundStatus);
+
+    @Select("<script>SELECT * FROM t_order_item WHERE order_id IN " +
+            "<foreach collection='orderIds' item='oid' open='(' separator=',' close=')'>#{oid}</foreach>" +
+            "</script>")
+    List<OrderItem> findByOrderIds(@Param("orderIds") Collection<Long> orderIds);
+
+    @Select("<script>SELECT * FROM t_order_item WHERE id IN " +
+            "<foreach collection='ids' item='id' open='(' separator=',' close=')'>#{id}</foreach>" +
+            "</script>")
+    List<OrderItem> findByIds(@Param("ids") Collection<Long> ids);
 }

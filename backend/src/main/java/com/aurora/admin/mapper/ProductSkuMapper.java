@@ -3,6 +3,7 @@ package com.aurora.admin.mapper;
 import com.aurora.admin.entity.ProductSku;
 import org.apache.ibatis.annotations.*;
 
+import java.util.Collection;
 import java.util.List;
 
 @Mapper
@@ -25,4 +26,9 @@ public interface ProductSkuMapper {
 
     @Update("UPDATE t_product_sku SET is_deleted = 1 WHERE product_id = #{productId}")
     int deleteByProductId(Long productId);
+
+    @Select("<script>SELECT * FROM t_product_sku WHERE is_deleted = 0 AND product_id IN " +
+            "<foreach collection='productIds' item='id' open='(' separator=',' close=')'>#{id}</foreach>" +
+            "</script>")
+    List<ProductSku> findByProductIds(@Param("productIds") Collection<Long> productIds);
 }

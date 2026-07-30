@@ -19,6 +19,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -111,7 +112,7 @@ class OrderServiceImplTest {
                 mockRedisIdempotentSuccess();
 
                 when(shoppingCartMapper.findByUserId(1L)).thenReturn(List.of(cartItem));
-                when(productMapper.findById(1L)).thenReturn(onSaleProduct);
+                when(productMapper.findByIds(org.mockito.ArgumentMatchers.<Set<Long>>any())).thenReturn(List.of(onSaleProduct));
                 when(orderMapper.findByOrderNo(anyString())).thenReturn(null);
                 when(orderMapper.insert(any(Order.class))).thenAnswer(inv -> {
                     Order o = inv.getArgument(0);
@@ -166,7 +167,7 @@ class OrderServiceImplTest {
             mockRedisIdempotentSuccess();
             onSaleProduct.setStatus("OFF_SHELF");
             when(shoppingCartMapper.findByUserId(1L)).thenReturn(List.of(cartItem));
-            when(productMapper.findById(1L)).thenReturn(onSaleProduct);
+            when(productMapper.findByIds(org.mockito.ArgumentMatchers.<Set<Long>>any())).thenReturn(List.of(onSaleProduct));
 
             assertThatThrownBy(() -> orderService.createOrder(1L, buildRequest(), "test-idempotent-key"))
                     .isInstanceOf(BusinessException.class)
@@ -181,7 +182,7 @@ class OrderServiceImplTest {
             mockRedisIdempotentSuccess();
             onSaleProduct.setStock(1); // 需要 2，只有 1
             when(shoppingCartMapper.findByUserId(1L)).thenReturn(List.of(cartItem));
-            when(productMapper.findById(1L)).thenReturn(onSaleProduct);
+            when(productMapper.findByIds(org.mockito.ArgumentMatchers.<Set<Long>>any())).thenReturn(List.of(onSaleProduct));
 
             assertThatThrownBy(() -> orderService.createOrder(1L, buildRequest(), "test-idempotent-key"))
                     .isInstanceOf(BusinessException.class)
@@ -198,7 +199,7 @@ class OrderServiceImplTest {
                 mockRedisIdempotentSuccess();
 
                 when(shoppingCartMapper.findByUserId(1L)).thenReturn(List.of(cartItem));
-                when(productMapper.findById(1L)).thenReturn(onSaleProduct);
+                when(productMapper.findByIds(org.mockito.ArgumentMatchers.<Set<Long>>any())).thenReturn(List.of(onSaleProduct));
                 when(orderMapper.findByOrderNo(anyString())).thenReturn(null);
                 when(orderMapper.insert(any(Order.class))).thenAnswer(inv -> {
                     Order o = inv.getArgument(0);
@@ -474,7 +475,7 @@ class OrderServiceImplTest {
 
             when(orderMapper.findById(1L)).thenReturn(order);
             when(orderItemMapper.findByOrderId(1L)).thenReturn(List.of(item));
-            when(productMapper.findById(1L)).thenReturn(onSaleProduct);
+            when(productMapper.findByIds(org.mockito.ArgumentMatchers.<Set<Long>>any())).thenReturn(List.of(onSaleProduct));
 
             OrderResponse response = orderService.getOrderDetail(1L, 1L);
 

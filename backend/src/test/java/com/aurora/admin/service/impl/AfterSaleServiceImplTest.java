@@ -16,7 +16,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -199,7 +201,8 @@ class AfterSaleServiceImplTest {
             return 1;
         });
         when(orderItemMapper.findByOrderId(1L)).thenReturn(List.of(normalItem));
-        when(afterSaleMapper.findByOrderItemId(10L)).thenReturn(appliedAfterSale);
+        when(afterSaleMapper.findAppliedByOrderItemIds(org.mockito.ArgumentMatchers.<Set<Long>>any())).thenReturn(Collections.emptyList());
+        when(afterSaleMapper.findByOrderItemIds(org.mockito.ArgumentMatchers.<Set<Long>>any())).thenReturn(List.of(appliedAfterSale));
         when(orderMapper.findById(1L)).thenReturn(paidOrder);
         when(orderMapper.updateStatus(eq(1L), eq("PAID"), eq(OrderStatus.REFUNDING.name()))).thenReturn(1);
 

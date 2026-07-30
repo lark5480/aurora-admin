@@ -1,5 +1,6 @@
 package com.aurora.admin.mapper;
 
+import com.aurora.admin.annotation.DataScope;
 import com.aurora.admin.entity.OperationLog;
 import org.apache.ibatis.annotations.*;
 
@@ -14,9 +15,11 @@ public interface OperationLogMapper {
     int insert(OperationLog log);
 
     @Select("SELECT * FROM t_operation_log WHERE is_deleted = 0 ORDER BY create_time DESC LIMIT #{offset}, #{limit}")
+    @DataScope(userColumn = "user_id")
     List<OperationLog> findPage(@Param("offset") int offset, @Param("limit") int limit);
 
     @Select("SELECT COUNT(*) FROM t_operation_log WHERE is_deleted = 0")
+    @DataScope(userColumn = "user_id")
     long count();
 
     @Select("SELECT * FROM t_operation_log WHERE create_time < #{beforeTime} AND is_deleted = 0 ORDER BY create_time DESC")

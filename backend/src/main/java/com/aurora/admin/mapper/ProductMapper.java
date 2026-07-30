@@ -3,6 +3,7 @@ package com.aurora.admin.mapper;
 import com.aurora.admin.entity.Product;
 import org.apache.ibatis.annotations.*;
 
+import java.util.Collection;
 import java.util.List;
 
 @Mapper
@@ -38,6 +39,15 @@ public interface ProductMapper {
 
     @Update("UPDATE t_product SET stock = #{stock} WHERE id = #{id}")
     int updateStockById(@Param("id") Long id, @Param("stock") int stock);
+
+    // ========== 批量查询 ==========
+
+    @Select("<script>SELECT p.*, c.name AS category_name FROM t_product p " +
+            "LEFT JOIN t_product_category c ON p.category_id = c.id AND c.is_deleted = 0 " +
+            "WHERE p.is_deleted = 0 AND p.id IN " +
+            "<foreach collection='ids' item='id' open='(' separator=',' close=')'>#{id}</foreach>" +
+            "</script>")
+    List<Product> findByIds(@Param("ids") Collection<Long> ids);
 
     // ========== 动态查询 / 批量操作（XML: mapper/ProductMapper.xml） ==========
 

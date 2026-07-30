@@ -22,6 +22,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -280,8 +281,8 @@ class ShoppingCartServiceImplTest {
         cart.setQuantity(2);
 
         when(shoppingCartMapper.findByUserId(1L)).thenReturn(List.of(cart));
-        when(productMapper.findById(1L)).thenReturn(onSaleProduct);
-        when(productSkuMapper.findByProductId(1L)).thenReturn(Collections.emptyList());
+        when(productMapper.findByIds(org.mockito.ArgumentMatchers.<Set<Long>>any())).thenReturn(List.of(onSaleProduct));
+        when(productSkuMapper.findByProductIds(org.mockito.ArgumentMatchers.<Set<Long>>any())).thenReturn(Collections.emptyList());
 
         List<CartItemResponse> items = cartService.getCart(1L);
 

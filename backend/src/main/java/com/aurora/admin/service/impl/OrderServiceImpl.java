@@ -3,14 +3,13 @@ package com.aurora.admin.service.impl;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -40,6 +39,7 @@ import com.aurora.admin.mapper.ShoppingCartMapper;
 import com.aurora.admin.service.MessageProducer;
 import com.aurora.admin.service.OrderService;
 import com.aurora.admin.util.SecurityUtils;
+import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -97,12 +97,21 @@ public class OrderServiceImpl implements OrderService {
         }
 
         // 2. 校验库存并准备订单明细
+        // 2. 批量加载商品和 SKU，避免 N+1
+        Set<Long> productIds = cartItems.stream().map(ShoppingCart::getProductId).collect(Collectors.toSet());
+        Map<Long, Product> productMap = productIds.isEmpty()
+                ? Collections.emptyMap()
+                : productMapper.findByIds(productIds).stream().collect(Collectors.toMap(Product::getId, Function.identity()));
+        Map<Long, ProductSku> skuMap = productIds.isEmpty()
+                ? Collections.emptyMap()
+                : productSkuMapper.findByProductIds(productIds).stream().collect(Collectors.toMap(ProductSku::getId, Function.identity()));
+
         List<OrderItem> orderItems = new ArrayList<>();
         Map<Long, String> coverImageMap = new HashMap<>();
         BigDecimal total = BigDecimal.ZERO;
 
         for (ShoppingCart cart : cartItems) {
-            Product product = productMapper.findById(cart.getProductId());
+            Product product = productMap.get(cart.getProductId());
             if (product == null) {
                 throw new BusinessException("商品不存在: " + cart.getProductId());
             }
@@ -123,11 +132,10 @@ public class OrderServiceImpl implements OrderService {
             BigDecimal price = product.getPrice();
 
             if (cart.getSkuId() != null) {
-                List<ProductSku> skus = productSkuMapper.findByProductId(cart.getProductId());
-                ProductSku sku = skus.stream()
-                        .filter(s -> s.getId().equals(cart.getSkuId()))
-                        .findFirst()
-                        .orElseThrow(() -> new BusinessException("SKU不存在: " + cart.getSkuId()));
+                ProductSku sku = skuMap.get(cart.getSkuId());
+                if (sku == null) {
+                    throw new BusinessException("SKU不存在: " + cart.getSkuId());
+                }
 
                 // 预校验 SKU 库存
                 if (sku.getStock() < cart.getQuantity()) {
@@ -152,9 +160,9 @@ public class OrderServiceImpl implements OrderService {
             total = total.add(price.multiply(BigDecimal.valueOf(cart.getQuantity())));
         }
 
-        // 3. 生成订单号（含碰撞重试）
+        // 3. 生成订单号（雪花ID，碰撞概率极低，保留1次重试兑底）
         String orderNo = null;
-        for (int attempt = 0; attempt < 3; attempt++) {
+        for (int attempt = 0; attempt < 2; attempt++) {
             String candidate = generateOrderNo();
             if (orderMapper.findByOrderNo(candidate) == null) {
                 orderNo = candidate;
@@ -251,8 +259,27 @@ public class OrderServiceImpl implements OrderService {
 
         List<Order> orders = orderMapper.findPage(offset, size, userId, query.status(),
                 query.orderNo(), query.username());
+
+        // 批量加载 OrderItem：一次查出所有订单的明细
+        List<Long> orderIds = orders.stream().map(Order::getId).collect(Collectors.toList());
+        Map<Long, List<OrderItem>> itemsByOrderId = orderIds.isEmpty()
+                ? Collections.emptyMap()
+                : orderItemMapper.findByOrderIds(orderIds).stream()
+                        .collect(Collectors.groupingBy(OrderItem::getOrderId));
+
+        // 批量加载商品封面
+        Set<Long> allProductIds = itemsByOrderId.values().stream()
+                .flatMap(List::stream).map(OrderItem::getProductId).collect(Collectors.toSet());
+        Map<Long, String> coverImageMap = allProductIds.isEmpty()
+                ? Collections.emptyMap()
+                : productMapper.findByIds(allProductIds).stream()
+                        .filter(p -> p.getCoverImage() != null)
+                        .collect(Collectors.toMap(Product::getId, Product::getCoverImage));
+
         List<OrderResponse> records = orders.stream()
-                .map(this::toOrderResponse)
+                .map(order -> toOrderResponse(order,
+                        itemsByOrderId.getOrDefault(order.getId(), Collections.emptyList()),
+                        coverImageMap))
                 .toList();
 
         return PageResult.of(records, total, page, size);
@@ -356,21 +383,27 @@ public class OrderServiceImpl implements OrderService {
     }
 
     /**
-     * 将 Order 转换为 OrderResponse（含明细）
+     * 将 Order 转换为 OrderResponse（含明细）。单条查询入口，内部改为批量加载封面。
      */
     private OrderResponse toOrderResponse(Order order) {
         List<OrderItem> items = orderItemMapper.findByOrderId(order.getId());
 
         // 批量加载商品封面
         Set<Long> productIds = items.stream().map(OrderItem::getProductId).collect(Collectors.toSet());
-        Map<Long, String> coverImageMap = new HashMap<>();
-        for (Long pid : productIds) {
-            Product product = productMapper.findById(pid);
-            if (product != null && product.getCoverImage() != null) {
-                coverImageMap.put(pid, product.getCoverImage());
-            }
-        }
+        Map<Long, String> coverImageMap = productIds.isEmpty()
+                ? Collections.emptyMap()
+                : productMapper.findByIds(productIds).stream()
+                        .filter(p -> p.getCoverImage() != null)
+                        .collect(Collectors.toMap(Product::getId, Product::getCoverImage));
 
+        return toOrderResponse(order, items, coverImageMap);
+    }
+
+    /**
+     * 将 Order 转换为 OrderResponse（使用预加载的明细和封面 Map）
+     */
+    private OrderResponse toOrderResponse(Order order, List<OrderItem> items,
+                                           Map<Long, String> coverImageMap) {
         List<OrderItemResponse> itemResponses = items.stream()
                 .map(item -> new OrderItemResponse(
                         item.getId(),
@@ -412,14 +445,10 @@ public class OrderServiceImpl implements OrderService {
     }
 
     /**
-     * 生成订单号：yyyyMMddHHmmss + 6 位随机数
+     * 生成订单号：使用 MyBatis-Plus 雪花算法生成全局唯一ID
      */
     private String generateOrderNo() {
-        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
-        // nextInt 遵循左闭右开规则 [origin, bound)
-        // int random = ThreadLocalRandom.current().nextInt(100000, 999999);
-        int random = ThreadLocalRandom.current().nextInt(100000, 1000000);
-        return timestamp + random;
+        return IdWorker.getIdStr();
     }
 
     private static final int MAX_EXPORT_ROWS = 100000;
