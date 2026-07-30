@@ -73,7 +73,7 @@ CLAUDE.local.md
 .playwright-mcp/
 
 # ============================================================
-# Agent/Review temporary files
+# AI / Code Review temporary artifacts
 # ============================================================
 review_*.txt
 *.diff
