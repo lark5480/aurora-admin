@@ -90,40 +90,50 @@ public class StatsServiceImpl implements StatsService {
             // 批量查询预聚合数据（不含今天）
             Map<LocalDate, Map<String, Integer>> aggregated = loadAggregatedStats(startDate, today.minusDays(1));
 
+            // 批量查询实时数据（覆盖所有日期，用于补充聚合数据缺失的日期和今天）
+            Map<LocalDate, Long> userCountMap = batchCountByDate(
+                    statsMapper.countUsersByDateRange(startDate, today));
+            Map<LocalDate, Long> fileCountMap = batchCountByDate(
+                    statsMapper.countFilesByDateRange(startDate, today));
+            Map<LocalDate, Long> messageCountMap = batchCountByDate(
+                    statsMapper.countMessagesByDateRange(startDate, today));
+            Map<LocalDate, Long> orderCountMap = batchCountByDate(
+                    statsMapper.countOrdersByDateRange(startDate, today));
+
             for (int i = days - 1; i >= 0; i--) {
                 LocalDate date = today.minusDays(i);
                 dates.add(date.toString());
 
-                if (date.isBefore(today)) {
-                    // 历史日期：优先读预聚合数据，没有则实时查
-                    Map<String, Integer> dayStats = aggregated.get(date);
-                    if (dayStats != null) {
-                        userData.add(dayStats.getOrDefault(TYPE_USER, 0).longValue());
-                        fileData.add(dayStats.getOrDefault(TYPE_FILE, 0).longValue());
-                        messageData.add(dayStats.getOrDefault(TYPE_MESSAGE, 0).longValue());
-                        orderData.add(dayStats.getOrDefault(TYPE_ORDER, 0).longValue());
-                    } else {
-                        userData.add(statsMapper.countUsersByDate(date));
-                        fileData.add(statsMapper.countFilesByDate(date));
-                        messageData.add(statsMapper.countMessagesByDate(date));
-                        orderData.add(statsMapper.countOrdersByDate(date));
-                    }
+                // 历史日期：优先读预聚合数据，没有则用实时批量查询
+                Map<String, Integer> dayStats = aggregated.get(date);
+                if (dayStats != null && date.isBefore(today)) {
+                    userData.add(dayStats.getOrDefault(TYPE_USER, 0).longValue());
+                    fileData.add(dayStats.getOrDefault(TYPE_FILE, 0).longValue());
+                    messageData.add(dayStats.getOrDefault(TYPE_MESSAGE, 0).longValue());
+                    orderData.add(dayStats.getOrDefault(TYPE_ORDER, 0).longValue());
                 } else {
-                    // 今天：实时查
-                    userData.add(statsMapper.countUsersByDate(date));
-                    fileData.add(statsMapper.countFilesByDate(date));
-                    messageData.add(statsMapper.countMessagesByDate(date));
-                    orderData.add(statsMapper.countOrdersByDate(date));
+                    userData.add(userCountMap.getOrDefault(date, 0L));
+                    fileData.add(fileCountMap.getOrDefault(date, 0L));
+                    messageData.add(messageCountMap.getOrDefault(date, 0L));
+                    orderData.add(orderCountMap.getOrDefault(date, 0L));
                 }
             }
         } else {
+            // 非管理员：批量查询
+            Map<LocalDate, Long> fileCountMap = batchCountByDate(
+                    statsMapper.countFilesByDateRange(startDate, today));
+            Map<LocalDate, Long> messageCountMap = batchCountByDate(
+                    statsMapper.countMessagesByDateRange(startDate, today));
+            Map<LocalDate, Long> orderCountMap = batchCountByDate(
+                    statsMapper.countOrdersByDateRange(startDate, today));
+
             for (int i = days - 1; i >= 0; i--) {
                 LocalDate date = today.minusDays(i);
                 dates.add(date.toString());
                 userData.add(0L);
-                fileData.add(statsMapper.countFilesByDate(date));
-                messageData.add(statsMapper.countMessagesByDate(date));
-                orderData.add(statsMapper.countOrdersByDate(date));
+                fileData.add(fileCountMap.getOrDefault(date, 0L));
+                messageData.add(messageCountMap.getOrDefault(date, 0L));
+                orderData.add(orderCountMap.getOrDefault(date, 0L));
             }
         }
 
@@ -133,6 +143,23 @@ public class StatsServiceImpl implements StatsService {
         result.put("fileData", fileData);
         result.put("messageData", messageData);
         result.put("orderData", orderData);
+        return result;
+    }
+
+    /**
+     * 将 Mapper 返回的 [{dt, cnt}] 转换为 Map<LocalDate, Long>
+     */
+    private Map<LocalDate, Long> batchCountByDate(List<Map<String, Object>> rows) {
+        Map<LocalDate, Long> result = new HashMap<>();
+        for (Map<String, Object> row : rows) {
+            Object dt = row.get("dt");
+            Object cnt = row.get("cnt");
+            if (dt instanceof java.sql.Date sqlDate) {
+                result.put(sqlDate.toLocalDate(), ((Number) cnt).longValue());
+            } else if (dt instanceof LocalDate ld) {
+                result.put(ld, ((Number) cnt).longValue());
+            }
+        }
         return result;
     }
 

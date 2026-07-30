@@ -80,4 +80,7 @@ public interface RoleMapper {
 
     @Delete("DELETE FROM t_user_role WHERE user_id = #{userId} AND role_id = #{roleId}")
     int deleteUserRole(@Param("userId") Long userId, @Param("roleId") Long roleId);
+
+    @Select("SELECT MIN(r.data_scope) FROM t_role r INNER JOIN t_user_role ur ON r.id = ur.role_id WHERE ur.user_id = #{userId} AND r.status = 1 AND r.is_deleted = 0")
+    Integer findMinDataScopeByUserId(@Param("userId") Long userId);
 }

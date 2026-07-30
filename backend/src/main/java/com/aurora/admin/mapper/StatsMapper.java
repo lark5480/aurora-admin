@@ -1,5 +1,6 @@
 package com.aurora.admin.mapper;
 
+import com.aurora.admin.annotation.DataScope;
 import org.apache.ibatis.annotations.*;
 
 import java.math.BigDecimal;
@@ -11,6 +12,7 @@ import java.util.Map;
 public interface StatsMapper {
 
     @Select("SELECT COUNT(*) FROM t_user WHERE is_deleted = 0")
+    @DataScope(userColumn = "id")
     long countUsers();
 
     @Select("SELECT COUNT(*) FROM t_file WHERE is_deleted = 0")
@@ -59,4 +61,30 @@ public interface StatsMapper {
 
     @Select("SELECT status, COUNT(*) AS count FROM t_order WHERE is_deleted = 0 GROUP BY status")
     List<Map<String, Object>> countOrdersByStatus();
+
+    // ===== 批量趋势查询（GROUP BY DATE） =====
+
+    @Select("SELECT DATE(create_time) AS dt, COUNT(*) AS cnt FROM t_user " +
+            "WHERE is_deleted = 0 AND DATE(create_time) BETWEEN #{startDate} AND #{endDate} " +
+            "GROUP BY DATE(create_time)")
+    List<Map<String, Object>> countUsersByDateRange(@Param("startDate") LocalDate startDate,
+                                                     @Param("endDate") LocalDate endDate);
+
+    @Select("SELECT DATE(create_time) AS dt, COUNT(*) AS cnt FROM t_file " +
+            "WHERE is_deleted = 0 AND DATE(create_time) BETWEEN #{startDate} AND #{endDate} " +
+            "GROUP BY DATE(create_time)")
+    List<Map<String, Object>> countFilesByDateRange(@Param("startDate") LocalDate startDate,
+                                                     @Param("endDate") LocalDate endDate);
+
+    @Select("SELECT DATE(create_time) AS dt, COUNT(*) AS cnt FROM t_message " +
+            "WHERE is_deleted = 0 AND DATE(create_time) BETWEEN #{startDate} AND #{endDate} " +
+            "GROUP BY DATE(create_time)")
+    List<Map<String, Object>> countMessagesByDateRange(@Param("startDate") LocalDate startDate,
+                                                        @Param("endDate") LocalDate endDate);
+
+    @Select("SELECT DATE(create_time) AS dt, COUNT(*) AS cnt FROM t_order " +
+            "WHERE is_deleted = 0 AND DATE(create_time) BETWEEN #{startDate} AND #{endDate} " +
+            "GROUP BY DATE(create_time)")
+    List<Map<String, Object>> countOrdersByDateRange(@Param("startDate") LocalDate startDate,
+                                                      @Param("endDate") LocalDate endDate);
 }

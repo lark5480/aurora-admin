@@ -1,5 +1,6 @@
 package com.aurora.admin.mapper;
 
+import com.aurora.admin.annotation.DataScope;
 import com.aurora.admin.entity.User;
 import org.apache.ibatis.annotations.*;
 import java.util.List;
@@ -27,9 +28,11 @@ public interface UserMapper {
     User findByUsernameIncludeDeleted(String username);
 
     @Select("SELECT * FROM t_user WHERE (username LIKE CONCAT('%', #{keyword}, '%') OR email LIKE CONCAT('%', #{keyword}, '%')) AND is_deleted = 0 LIMIT #{offset}, #{size}")
+    @DataScope(userColumn = "id")
     List<User> findAll(@Param("offset") int offset, @Param("size") int size, @Param("keyword") String keyword);
 
     @Select("SELECT COUNT(*) FROM t_user WHERE (username LIKE CONCAT('%', #{keyword}, '%') OR email LIKE CONCAT('%', #{keyword}, '%')) AND is_deleted = 0")
+    @DataScope(userColumn = "id")
     int count(@Param("keyword") String keyword);
 
     @Update("UPDATE t_user SET username = #{username}, email = #{email}, nickname = #{nickname}, avatar = #{avatar}, " +

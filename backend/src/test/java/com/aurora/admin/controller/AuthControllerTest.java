@@ -121,7 +121,7 @@ class AuthControllerTest {
         // then
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(200, response.getBody().getCode());
-        assertEquals("注册成功", response.getBody().getMessage());
+        assertEquals("注册成功", response.getBody().getData());
         verify(userService).register("newuser", "password123", "new@example.com");
     }
 
@@ -240,7 +240,7 @@ class AuthControllerTest {
         // then
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(200, response.getBody().getCode());
-        assertEquals("退出成功", response.getBody().getMessage());
+        assertEquals("退出成功", response.getBody().getData());
     }
 
     @Test
@@ -254,7 +254,7 @@ class AuthControllerTest {
         // then
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(200, response.getBody().getCode());
-        assertEquals("退出成功", response.getBody().getMessage());
+        assertEquals("退出成功", response.getBody().getData());
     }
 
     @Test
@@ -268,6 +268,6 @@ class AuthControllerTest {
         // then
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(200, response.getBody().getCode());
-        assertEquals("退出成功", response.getBody().getMessage());
+        assertEquals("退出成功", response.getBody().getData());
     }
 }

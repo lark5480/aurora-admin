@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @TableName("t_after_sale")
 public class AfterSale {
 
-    @TableId(type = IdType.AUTO)
+    @TableId(type = IdType.ASSIGN_ID)
     private Long id;
 
     private String afterSaleNo;

@@ -1,8 +1,10 @@
 package com.aurora.admin.mapper;
 
+import com.aurora.admin.annotation.DataScope;
 import com.aurora.admin.entity.AfterSale;
 import org.apache.ibatis.annotations.*;
 
+import java.util.Collection;
 import java.util.List;
 
 @Mapper
@@ -32,14 +34,33 @@ public interface AfterSaleMapper {
                      @Param("reviewerId") Long reviewerId,
                      @Param("expectedStatus") String expectedStatus);
 
+    // ========== 批量查询 ==========
+
+    @Select("<script>SELECT * FROM t_after_sale WHERE is_deleted = 0 AND status = 'APPLIED' AND order_item_id IN " +
+            "<foreach collection='orderItemIds' item='id' open='(' separator=',' close=')'>#{id}</foreach>" +
+            "</script>")
+    List<AfterSale> findAppliedByOrderItemIds(@Param("orderItemIds") Collection<Long> ids);
+
+    @Select("<script>SELECT * FROM t_after_sale WHERE is_deleted = 0 AND order_item_id IN " +
+            "<foreach collection='orderItemIds' item='id' open='(' separator=',' close=')'>#{id}</foreach>" +
+            "</script> ORDER BY create_time DESC")
+    List<AfterSale> findByOrderItemIds(@Param("orderItemIds") Collection<Long> ids);
+
+    @Select("<script>SELECT * FROM t_after_sale WHERE is_deleted = 0 AND status = 'APPLIED' AND order_id IN " +
+            "<foreach collection='orderIds' item='id' open='(' separator=',' close=')'>#{id}</foreach>" +
+            "</script>")
+    List<AfterSale> findAppliedByOrderIds(@Param("orderIds") Collection<Long> orderIds);
+
     // ========== 动态查询（XML: mapper/AfterSaleMapper.xml） ==========
 
+    @DataScope(userColumn = "a.user_id")
     List<AfterSale> findPage(@Param("offset") int offset, @Param("size") int size,
                              @Param("userId") Long userId, @Param("orderId") Long orderId,
                              @Param("status") String status,
                              @Param("afterSaleNo") String afterSaleNo,
                              @Param("orderNo") String orderNo);
 
+    @DataScope(userColumn = "a.user_id")
     long countFiltered(@Param("userId") Long userId, @Param("orderId") Long orderId,
                        @Param("status") String status,
                        @Param("afterSaleNo") String afterSaleNo,

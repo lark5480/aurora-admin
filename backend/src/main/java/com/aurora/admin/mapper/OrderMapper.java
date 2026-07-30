@@ -1,5 +1,6 @@
 package com.aurora.admin.mapper;
 
+import com.aurora.admin.annotation.DataScope;
 import com.aurora.admin.entity.Order;
 import org.apache.ibatis.annotations.*;
 
@@ -33,13 +34,16 @@ public interface OrderMapper {
 
     // ========== 动态查询 / 批量操作（XML: mapper/OrderMapper.xml） ==========
 
+    @DataScope(userColumn = "o.user_id")
     List<Order> findPage(@Param("offset") int offset, @Param("size") int size,
                          @Param("userId") Long userId, @Param("status") String status,
                          @Param("orderNo") String orderNo, @Param("username") String username);
 
+    @DataScope(userColumn = "o.user_id")
     long countFiltered(@Param("userId") Long userId, @Param("status") String status,
                        @Param("orderNo") String orderNo, @Param("username") String username);
 
+    @DataScope(userColumn = "o.user_id")
     List<Order> findForExport(@Param("userId") Long userId, @Param("status") String status,
                               @Param("orderNo") String orderNo, @Param("username") String username,
                               @Param("limit") int limit);

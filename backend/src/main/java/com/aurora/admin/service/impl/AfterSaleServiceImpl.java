@@ -2,10 +2,12 @@ package com.aurora.admin.service.impl;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +24,7 @@ import com.aurora.admin.mapper.ProductStockMapper;
 import com.aurora.admin.service.AfterSaleService;
 import com.aurora.admin.service.MessageProducer;
 import com.aurora.admin.util.SecurityUtils;
+import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -143,10 +146,18 @@ public class AfterSaleServiceImpl implements AfterSaleService {
         }
 
         List<OrderItem> items = orderItemMapper.findByOrderId(order.getId());
+
+        // 批量查询该订单所有 APPLIED 状态的售后记录
+        Set<Long> itemIds = items.stream().map(OrderItem::getId).collect(Collectors.toSet());
+        Map<Long, AfterSale> appliedByItemId = itemIds.isEmpty()
+                ? Collections.emptyMap()
+                : afterSaleMapper.findAppliedByOrderItemIds(itemIds).stream()
+                        .collect(Collectors.toMap(AfterSale::getOrderItemId, Function.identity(), (a, b) -> a));
+
         List<OrderItem> refundableItems = items.stream()
                 .filter(i -> !"REFUNDED".equals(i.getRefundStatus()))
                 .filter(i -> {
-                    AfterSale existing = afterSaleMapper.findAppliedByOrderItemId(i.getId());
+                    AfterSale existing = appliedByItemId.get(i.getId());
                     return existing == null || !"APPLIED".equals(existing.getStatus());
                 })
                 .toList();
@@ -321,8 +332,16 @@ public class AfterSaleServiceImpl implements AfterSaleService {
 
         List<AfterSale> list = afterSaleMapper.findPage(offset, size, userId, query.orderId(),
                 query.status(), query.afterSaleNo(), query.orderNo());
+
+        // 批量预加载 OrderItem
+        Set<Long> orderItemIds = list.stream().map(AfterSale::getOrderItemId).collect(Collectors.toSet());
+        Map<Long, OrderItem> itemMap = orderItemIds.isEmpty()
+                ? Collections.emptyMap()
+                : orderItemMapper.findByIds(orderItemIds).stream()
+                        .collect(Collectors.toMap(OrderItem::getId, Function.identity()));
+
         List<AfterSaleResponse> records = list.stream()
-                .map(this::toResponse)
+                .map(a -> toResponse(a, itemMap.get(a.getOrderItemId())))
                 .toList();
 
         return PageResult.of(records, total, page, size);
@@ -345,6 +364,10 @@ public class AfterSaleServiceImpl implements AfterSaleService {
 
     private AfterSaleResponse toResponse(AfterSale a) {
         OrderItem item = orderItemMapper.findById(a.getOrderItemId());
+        return toResponse(a, item);
+    }
+
+    private AfterSaleResponse toResponse(AfterSale a, OrderItem item) {
         String productName = item != null ? item.getProductName() : "";
         String specName = item != null ? item.getSpecName() : "";
         return new AfterSaleResponse(
@@ -395,12 +418,10 @@ public class AfterSaleServiceImpl implements AfterSaleService {
     }
 
     /**
-     * 生成售后单号。格式：AS + yyyyMMddHHmmss + 6位随机数。
+     * 生成售后单号：AS + 雪花算法全局唯一ID
      */
     private String generateAfterSaleNo() {
-        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
-        int random = ThreadLocalRandom.current().nextInt(100000, 1000000);
-        return "AS" + timestamp + random;
+        return "AS" + IdWorker.getIdStr();
     }
 
     /**
@@ -408,10 +429,15 @@ public class AfterSaleServiceImpl implements AfterSaleService {
      */
     private void restoreOrderIfNoPending(Long orderId, String afterSaleType) {
         List<OrderItem> allItems = orderItemMapper.findByOrderId(orderId);
-        boolean hasApplied = allItems.stream().anyMatch(i -> {
-            AfterSale as = afterSaleMapper.findAppliedByOrderItemId(i.getId());
-            return as != null;
-        });
+        Set<Long> allItemIds = allItems.stream().map(OrderItem::getId).collect(Collectors.toSet());
+
+        // 批量查询所有 APPLIED 状态的售后记录
+        Map<Long, AfterSale> appliedByItemId = allItemIds.isEmpty()
+                ? Collections.emptyMap()
+                : afterSaleMapper.findAppliedByOrderItemIds(allItemIds).stream()
+                        .collect(Collectors.toMap(AfterSale::getOrderItemId, Function.identity(), (a, b) -> a));
+
+        boolean hasApplied = allItemIds.stream().anyMatch(appliedByItemId::containsKey);
         if (hasApplied) {
             return; // 还有待审核的，保持 REFUNDING
         }
@@ -421,9 +447,14 @@ public class AfterSaleServiceImpl implements AfterSaleService {
             return;
         }
 
-        // 从已处理的售后记录中取原始订单状态
-        String originalStatus = allItems.stream()
-                .map(i -> afterSaleMapper.findByOrderItemId(i.getId()))
+        // 批量查询所有售后记录，取原始订单状态
+        Map<Long, AfterSale> allByItemId = allItemIds.isEmpty()
+                ? Collections.emptyMap()
+                : afterSaleMapper.findByOrderItemIds(allItemIds).stream()
+                        .collect(Collectors.toMap(AfterSale::getOrderItemId, Function.identity(), (a, b) -> a));
+
+        String originalStatus = allItemIds.stream()
+                .map(allByItemId::get)
                 .filter(as -> as != null && as.getOriginalOrderStatus() != null)
                 .findFirst()
                 .map(AfterSale::getOriginalOrderStatus)

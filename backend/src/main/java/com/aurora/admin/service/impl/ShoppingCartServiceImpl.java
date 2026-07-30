@@ -19,6 +19,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * 购物车服务实现。提供购物车增删改查、SKU 切换及合并逻辑。
@@ -36,8 +40,25 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     @Override
     public List<CartItemResponse> getCart(Long userId) {
         List<ShoppingCart> cartItems = shoppingCartMapper.findByUserId(userId);
+        if (cartItems.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // 批量预加载 Product
+        Set<Long> productIds = cartItems.stream().map(ShoppingCart::getProductId).collect(Collectors.toSet());
+        Map<Long, Product> productMap = productIds.isEmpty()
+                ? Collections.emptyMap()
+                : productMapper.findByIds(productIds).stream()
+                        .collect(Collectors.toMap(Product::getId, Function.identity()));
+
+        // 批量预加载 SKU
+        Map<Long, List<ProductSku>> skusByProductId = productIds.isEmpty()
+                ? Collections.emptyMap()
+                : productSkuMapper.findByProductIds(productIds).stream()
+                        .collect(Collectors.groupingBy(ProductSku::getProductId));
+
         return cartItems.stream()
-                .map(this::toCartItemResponse)
+                .map(cart -> toCartItemResponse(cart, productMap, skusByProductId))
                 .toList();
     }
 
@@ -125,8 +146,10 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
         shoppingCartMapper.deleteByUserId(userId);
     }
 
-    private CartItemResponse toCartItemResponse(ShoppingCart cart) {
-        Product product = productMapper.findById(cart.getProductId());
+    private CartItemResponse toCartItemResponse(ShoppingCart cart,
+                                                   Map<Long, Product> productMap,
+                                                   Map<Long, List<ProductSku>> skusByProductId) {
+        Product product = productMap.get(cart.getProductId());
         if (product == null) {
             throw new BusinessException("购物车商品不存在: " + cart.getProductId());
         }
@@ -135,7 +158,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
         BigDecimal price = product.getPrice();
         List<SkuOption> availableSkus = Collections.emptyList();
 
-        List<ProductSku> skus = productSkuMapper.findByProductId(cart.getProductId());
+        List<ProductSku> skus = skusByProductId.getOrDefault(cart.getProductId(), Collections.emptyList());
         if (!skus.isEmpty()) {
             availableSkus = skus.stream()
                     .map(s -> new SkuOption(s.getId(), s.getSpecName(), s.getPrice(), s.getStock()))
