@@ -43,7 +43,7 @@ public interface AfterSaleMapper {
 
     @Select("<script>SELECT * FROM t_after_sale WHERE is_deleted = 0 AND order_item_id IN " +
             "<foreach collection='orderItemIds' item='id' open='(' separator=',' close=')'>#{id}</foreach>" +
-            "</script> ORDER BY create_time DESC")
+            " ORDER BY create_time DESC</script>")
     List<AfterSale> findByOrderItemIds(@Param("orderItemIds") Collection<Long> ids);
 
     @Select("<script>SELECT * FROM t_after_sale WHERE is_deleted = 0 AND status = 'APPLIED' AND order_id IN " +
