@@ -22,13 +22,16 @@ export const cartApi = {
 }
 
 export const orderApi = {
-  create(data: {
-    cartItemIds: number[]
-    receiverName: string
-    receiverPhone: string
-    receiverAddress: string
-    remark?: string
-  }, idempotentKey: string) {
+  create(
+    data: {
+      cartItemIds: number[]
+      receiverName: string
+      receiverPhone: string
+      receiverAddress: string
+      remark?: string
+    },
+    idempotentKey: string,
+  ) {
     return api.post('/orders', data, { headers: { 'Idempotent-Key': idempotentKey } })
   },
   list(params: { page: number; size: number; status?: string; orderNo?: string; username?: string }) {
