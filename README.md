@@ -44,7 +44,7 @@ docs/
 
 ```bash
 # 终端 1：启动中间件（MySQL + Redis + RabbitMQ + ES，后台运行）
-docker compose up mysql redis rabbitmq elasticsearch -d
+docker compose up -d mysql redis rabbitmq elasticsearch
 
 # 终端 2：启动后端（Java 21 + Spring Boot 3，端口 8080）
 cd backend && mvn spring-boot:run
@@ -56,9 +56,7 @@ cd frontend && npm install && npm run dev
 > 后端在 IntelliJ IDEA 中打开 `backend/` 目录，运行 `AuroraAdminApplication.java` 效果相同。  
 > `application-dev.yml` 的连接参数默认值已对齐 docker-compose 的中间件配置，开箱即用。
 
-### 方式二：全容器化（演示/部署）
-
-### 全部容器化（演示/部署）
+### 方式二：全部容器化（演示/部署）
 
 ```bash
 docker compose up -d

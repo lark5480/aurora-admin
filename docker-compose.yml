@@ -1,5 +1,5 @@
 # Aurora Admin — 中间件 + 应用容器化
-# 方式一【推荐】只启中间件，IDE 本地跑前后端：docker compose up mysql redis rabbitmq elasticsearch -d
+# 方式一【推荐】只启中间件，IDE 本地跑前后端：docker compose up -d mysql redis rabbitmq elasticsearch
 # 方式二       全容器化部署：docker compose up -d
 # 日志: docker compose logs -f
 # 停止: docker compose down
