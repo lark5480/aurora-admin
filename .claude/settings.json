@@ -30,7 +30,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "cd frontend && npx prettier --write \"${file_path}\" 2>/dev/null || true"
+            "async": true,
+            "command": "cd frontend && ./node_modules/.bin/prettier --write \"${file_path}\" 2>/dev/null || true"
           }
         ]
       },
@@ -42,7 +43,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "cd frontend && npx prettier --write \"${file_path}\" 2>/dev/null || true"
+            "async": true,
+            "command": "cd frontend && ./node_modules/.bin/prettier --write \"${file_path}\" 2>/dev/null || true"
           }
         ]
       }
