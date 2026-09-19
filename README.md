@@ -20,7 +20,8 @@ docs/
 ├── 02-Docker安装Redis及配置.md
 ├── 03-Docker安装RabbitMQ及配置.md
 ├── 04-Docker安装Elasticsearch及配置.md
-└── 05-前端项目运行指南.md       ← 前端 Node.js 环境 & 启动说明
+├── 05-前端项目运行指南.md       ← 前端 Node.js 环境 & 启动说明
+└── notes/interview-qa.md        ← 实现原理剖析与面试 Q&A（进阶阅读）
 ```
 
 简单来说：装好 Docker Desktop → 按 01~04 拉镜像启动中间件 → 启动后端 → 按 05 装 Node 启动前端。
@@ -111,3 +112,7 @@ cd frontend && npx playwright test        # E2E 测试
 curl http://localhost:9200                 # ES 是否就绪
 # RabbitMQ 管理面板：http://localhost:15672（admin / admin123）
 ```
+
+## 许可
+
+本项目基于 [MIT License](LICENSE) 开源。
