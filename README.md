@@ -37,6 +37,31 @@ docs/
 | 前端 | Vue 3, TypeScript, Vite, Pinia, Element Plus, ECharts |
 | 认证 | JWT + Spring Security |
 
+## 架构总览
+
+```mermaid
+flowchart LR
+    B["浏览器 Vue3 SPA<br/>(:3001 Vite / :80 Nginx)"] -- "/api · /uploads · /ws" --> API
+
+    subgraph API["Spring Boot :8080"]
+        SEC["JWT + Spring Security<br/>动态路由 menuTree"] --> CTL[Controller]
+        CTL --> RL["@RateLimit 切面<br/>Redis Lua → Bucket4j 降级"]
+        CTL --> SVC[Service]
+        SVC --> DS["@DataScope 数据权限<br/>MyBatis 拦截器追加 SQL"]
+    end
+
+    SVC --> DB[(MySQL 8)]
+    SVC --> RD[(Redis 7<br/>幂等锁 / 限流 / 缓存)]
+    SVC -- "发件箱落库 + Confirm" --> MQ[(RabbitMQ)]
+    MQ -- "@RabbitListener 消费" --> SVC
+    MQ -. "nack(requeue=false)" .-> DLQ[死信队列 order.notify.dlq]
+    TASK["定时补偿 + ShedLock"] -- "重发 status=2" --> MQ
+    SVC --> ES[(Elasticsearch 8 + IK<br/>不可用时透明降级)]
+    SVC -- "WebSocket STOMP /ws/message" --> B
+```
+
+核心链路：下单经幂等锁 + 乐观锁扣库存防超卖；订单通知走「本地消息表 → Publisher Confirm → 2 分钟补偿 → DLQ」保最终一致；限流和搜索均在中间件故障时自动降级，不阻塞主流程。
+
 ## 快速启动
 
 ### 方式一：本地开发（推荐）
@@ -94,7 +119,7 @@ frontend/  src/
   router/       # 动态路由
   components/   # 公共组件
   directives/   # 自定义指令（v-permission）
-docs/           # 环境搭建 & 设计文档
+docs/           # 环境搭建指南（00~05）+ 原理剖析笔记（notes/）
 ```
 
 ## 常用命令

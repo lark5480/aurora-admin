@@ -38,4 +38,4 @@
 - 常用检查：`cd frontend && npx tsc --noEmit` | `cd backend && mvn test` | `cd frontend && npx playwright test`
 - RabbitMQ 面板：`http://localhost:15672` | ES 验证：`curl http://localhost:9200`
 
-> 完整页面/Controller/Entity/Store/API 清单已抽取到 memory，需要时我会自动调用。
+> 页面/Controller/Entity/Store/API 全量清单不在本文维护（易漂移），需要时直接扫描 `controller/`、`entity/`、`frontend/src/views/`、`frontend/src/stores/` 目录获取。（本机 AI 另有 memory 缓存可先行参考。）
