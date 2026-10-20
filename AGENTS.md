@@ -5,13 +5,13 @@
 - 前端：Vue 3, TypeScript, Vite, Pinia, Element Plus, ECharts
 
 ## 架构要点
-- **认证**：JWT Bearer Token + Spring Security + `JwtAuthenticationFilter`（OncePerRequestFilter），`sessionStorage` 存 token
+- **认证**：JWT Bearer Token + Spring Security + `JwtAuthenticationFilter`（OncePerRequestFilter），`sessionStorage` 存 token（`localStorage` 作为备选读取源）
 - **鉴权**：`@PreAuthorize("hasAnyRole('ADMIN','SUPER_ADMIN')")` 方法级权限，前端 `v-permission` 指令（`directives/permission.ts`）按钮级鉴权
 - **数据权限**：`@DataScope` 注解 + `DataScopeInterceptor`（MyBatis-Plus InnerInterceptor），基于 `t_role.data_scope` 自动追加 SQL 过滤条件；Phase 1 支持 `1=全部` / `4=仅本人`，标注在 Mapper 分页/列表方法上
 - **状态**：Pinia Setup Store 语法（`defineStore('x', () => { ... })`），7 个 store：user / message / config / product / order / address / afterSale
 - **路由**：动态路由 — 登录后 `useUserStore().menuTree` 驱动 `router.addRoute('home', ...)` 注册子路由
 - **响应**：`ApiResponse<T>` (code, message, data)，`utils/request.ts` 的 axios 响应拦截器自动解包
-- **限流**：Bucket4j（登录 5次/15分钟，注册 3次/小时），依赖 Redis
+- **限流**：登录 5次/15分钟、注册 3次/小时（`AuthController` 内置 Bucket4j）；通用 `@RateLimit` 注解 + `RateLimitAspect`（Redis Lua 原子 INCR+EXPIRE，Redis 不可用回退本地 Bucket4j），依赖 Redis
 - **消息队列**：RabbitMQ，`MessageProducer` 发送，`@RabbitListener` 消费（订单创建通知、ES 索引重建）
 - **搜索引擎**：Elasticsearch 8，`ProductSearchService` 全文搜索，`EsIndexInitializer` 启动时建索引
 - **分布式锁**：ShedLock `@SchedulerLock`，定时任务防重
